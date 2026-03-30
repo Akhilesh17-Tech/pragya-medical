@@ -24,11 +24,11 @@ type Patient struct {
 	Clinic                 string         `json:"clinic"`
 	Delivery               bool           `json:"delivery"        gorm:"default:false"`
 	DeliveryStatus         string         `json:"delivery_status" gorm:"default:''"`
-	DeliveryDate           *time.Time     `json:"delivery_date"`
+	DeliveryDate           *time.Time     `json:"delivery_date"  gorm:"type:date"`
 	DeliveryBoy            string         `json:"delivery_boy"`
 	ReminderStatus         string         `json:"reminder_status" gorm:"default:pending"`
 	Insurance              string         `json:"insurance"`
-	InsuranceDate          *time.Time     `json:"insurance_date"`
+	InsuranceDate          *time.Time     `json:"insurance_date" gorm:"type:date"`
 	MonthlyExpense         int            `json:"monthly_expense" gorm:"default:0"`
 	Purchaser              string         `json:"purchaser"       gorm:"default:Self"`
 	PurchaserName          string         `json:"purchaser_name"`

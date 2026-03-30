@@ -183,7 +183,7 @@ export default function RemindersPage() {
 
               {/* Actions */}
               <div className="flex gap-1.5 mt-2">
-                
+                <a
                   href={getWALink(p.whatsapp || p.mobile, p.name, p.medicines, p.days_left)}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -192,7 +192,7 @@ export default function RemindersPage() {
                 >
                   WhatsApp
                 </a>
-                
+                <a
                   href={"tel:" + p.mobile}
                   className="flex-1 py-1.5 bg-[#e8f1fb] text-[#1a6fc4] text-center rounded-lg text-[11px] font-bold"
                 >

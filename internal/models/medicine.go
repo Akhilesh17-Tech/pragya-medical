@@ -17,7 +17,7 @@ type Medicine struct {
 	DosageForm  string    `json:"dosage_form"  gorm:"default:tablet"`
 	Qty         float64   `json:"qty"`
 	DosePerDay  float64   `json:"dose_per_day"`
-	StartDate   time.Time `json:"start_date"`
+	StartDate   time.Time `json:"start_date" gorm:"type:date"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 

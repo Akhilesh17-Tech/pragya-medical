@@ -19,15 +19,18 @@ import { formatDate, getWALink, DELIVERY_LABELS } from "@/lib/utils";
 import type { Patient } from "@/types";
 
 export default function PatientProfilePage() {
-  const [patient, setPatient]   = useState<Patient | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refilling, setRefilling] = useState<string | null>(null);
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
   useEffect(() => {
-    if (!auth.isLoggedIn()) { router.replace("/"); return; }
+    if (!auth.isLoggedIn()) {
+      router.replace("/");
+      return;
+    }
     loadPatient();
   }, [id]);
 
@@ -77,18 +80,30 @@ export default function PatientProfilePage() {
     }
   };
 
-  if (loading) return <PhoneShell><TopBar title="Patient Profile" /><Spinner /></PhoneShell>;
+  if (loading)
+    return (
+      <PhoneShell>
+        <TopBar title="Patient Profile" />
+        <Spinner />
+      </PhoneShell>
+    );
   if (!patient) return null;
 
   const tagColor =
-    patient.tag === "urgent" ? "#e74c3c" :
-    patient.tag === "today"  ? "#e67e22" :
-    patient.tag === "upcoming" ? "#f39c12" :
-    patient.tag === "missed" ? "#95a5a6" : "#27ae60";
+    patient.tag === "urgent"
+      ? "#e74c3c"
+      : patient.tag === "today"
+        ? "#e67e22"
+        : patient.tag === "upcoming"
+          ? "#f39c12"
+          : patient.tag === "missed"
+            ? "#95a5a6"
+            : "#27ae60";
 
-  const daysStr = patient.days_left <= 0
-    ? "Medicine Finished"
-    : `${patient.days_left} Days Left`;
+  const daysStr =
+    patient.days_left <= 0
+      ? "Medicine Finished"
+      : `${patient.days_left} Days Left`;
 
   return (
     <PhoneShell>
@@ -124,8 +139,13 @@ export default function PatientProfilePage() {
 
           {/* Action buttons */}
           <div className="flex gap-2 mt-3">
-            
-              href={getWALink(patient.whatsapp || patient.mobile, patient.name, patient.medicines, patient.days_left)}
+            <a
+              href={getWALink(
+                patient.whatsapp || patient.mobile,
+                patient.name,
+                patient.medicines,
+                patient.days_left,
+              )}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => handleMarkStatus("sent")}
@@ -133,7 +153,7 @@ export default function PatientProfilePage() {
             >
               WhatsApp
             </a>
-            
+            <a
               href={"tel:" + patient.mobile}
               className="flex-1 py-2 bg-white text-[#1a6fc4] text-center rounded-lg text-[12px] font-bold"
             >
@@ -145,12 +165,12 @@ export default function PatientProfilePage() {
         {/* Basic details */}
         <InfoSection title="Basic Details">
           {[
-            ["Mobile",  patient.mobile],
+            ["Mobile", patient.mobile],
             ["WhatsApp", patient.whatsapp || patient.mobile],
-            ["Gender",  patient.gender],
-            ["Area",    patient.area],
+            ["Gender", patient.gender],
+            ["Area", patient.area],
             ["Address", patient.address],
-            ["Doctor",  patient.doctor],
+            ["Doctor", patient.doctor],
           ].map(([l, v]) => (
             <InfoRow key={l} label={l} value={v} />
           ))}
@@ -162,7 +182,10 @@ export default function PatientProfilePage() {
           {patient.diseases?.length > 1 && (
             <div className="flex gap-1 flex-wrap pt-1">
               {patient.diseases.map((d) => (
-                <span key={d} className="bg-[#e8f1fb] text-[#1a6fc4] text-[10px] font-bold px-2 py-0.5 rounded">
+                <span
+                  key={d}
+                  className="bg-[#e8f1fb] text-[#1a6fc4] text-[10px] font-bold px-2 py-0.5 rounded"
+                >
                   {d}
                 </span>
               ))}
@@ -174,10 +197,15 @@ export default function PatientProfilePage() {
         <InfoSection title={`Medicines — ${daysStr}`}>
           {patient.medicines?.map((m) => {
             const dl = m.days_left ?? 0;
-            const dlColor = dl <= 0 ? "#e74c3c" : dl <= 3 ? "#e67e22" : "#27ae60";
-            const supply = m.qty && m.dose_per_day ? Math.ceil(m.qty / m.dose_per_day) : 0;
+            const dlColor =
+              dl <= 0 ? "#e74c3c" : dl <= 3 ? "#e67e22" : "#27ae60";
+            const supply =
+              m.qty && m.dose_per_day ? Math.ceil(m.qty / m.dose_per_day) : 0;
             return (
-              <div key={m.id} className="bg-[#f7fbff] rounded-xl p-3 mb-2 border border-[#dce6f0]">
+              <div
+                key={m.id}
+                className="bg-[#f7fbff] rounded-xl p-3 mb-2 border border-[#dce6f0]"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-[13px] font-extrabold">{m.brand}</p>
@@ -185,7 +213,10 @@ export default function PatientProfilePage() {
                       {m.composition} · {m.company} · {m.strength}
                     </p>
                   </div>
-                  <span className="text-[12px] font-bold" style={{ color: dlColor }}>
+                  <span
+                    className="text-[12px] font-bold"
+                    style={{ color: dlColor }}
+                  >
                     {dl <= 0 ? "FINISHED" : `${dl}d left`}
                   </span>
                 </div>
@@ -195,7 +226,10 @@ export default function PatientProfilePage() {
                     ["DOSE", `${m.dose_per_day}/day`],
                     ["SUPPLY", `${supply}d`],
                   ].map(([l, v]) => (
-                    <div key={l} className="bg-white rounded-lg p-1.5 text-center border border-[#dce6f0]">
+                    <div
+                      key={l}
+                      className="bg-white rounded-lg p-1.5 text-center border border-[#dce6f0]"
+                    >
                       <p className="text-[9px] text-gray-500 font-bold">{l}</p>
                       <p className="text-[11px] font-extrabold">{v}</p>
                     </div>
@@ -217,7 +251,8 @@ export default function PatientProfilePage() {
             );
           })}
           <p className="text-[12px] text-gray-500 text-right font-semibold">
-            Monthly Expense: Rs {patient.monthly_expense?.toLocaleString("en-IN")}
+            Monthly Expense: Rs{" "}
+            {patient.monthly_expense?.toLocaleString("en-IN")}
           </p>
         </InfoSection>
 
@@ -226,7 +261,10 @@ export default function PatientProfilePage() {
           <InfoSection title="Insurance">
             <InfoRow label="Company" value={patient.insurance} />
             {patient.insurance_date && (
-              <InfoRow label="Expiry" value={formatDate(patient.insurance_date)} />
+              <InfoRow
+                label="Expiry"
+                value={formatDate(patient.insurance_date)}
+              />
             )}
           </InfoSection>
         )}
@@ -234,8 +272,13 @@ export default function PatientProfilePage() {
         {/* Delivery */}
         {patient.delivery && (
           <InfoSection title="Delivery Tracking">
-            <InfoRow label="Status" value={DELIVERY_LABELS[patient.delivery_status] || "—"} />
-            {patient.delivery_boy && <InfoRow label="Delivery Boy" value={patient.delivery_boy} />}
+            <InfoRow
+              label="Status"
+              value={DELIVERY_LABELS[patient.delivery_status] || "—"}
+            />
+            {patient.delivery_boy && (
+              <InfoRow label="Delivery Boy" value={patient.delivery_boy} />
+            )}
           </InfoSection>
         )}
 
@@ -273,7 +316,13 @@ export default function PatientProfilePage() {
   );
 }
 
-function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
+function InfoSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="px-4 py-3 border-b border-[#dce6f0]">
       <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wide mb-2">
