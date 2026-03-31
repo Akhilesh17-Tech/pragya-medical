@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { apiGetPatients, apiDeletePatient } from "@/lib/api";
+import { apiGetPatients } from "@/lib/api";
 import PhoneShell from "@/components/layout/PhoneShell";
-import TopBar from "@/components/layout/TopBar";
 import BottomNav from "@/components/layout/BottomNav";
 import Toast, { showToast } from "@/components/ui/Toast";
 import Spinner from "@/components/ui/Spinner";
@@ -35,21 +34,15 @@ export default function PatientsPage() {
       router.replace("/");
       return;
     }
-    loadPatients();
+    apiGetPatients()
+      .then((res) => {
+        const d = res.data.data || [];
+        setPatients(d);
+        setFiltered(d);
+      })
+      .catch(() => showToast("Failed to load patients"))
+      .finally(() => setLoading(false));
   }, []);
-
-  const loadPatients = async () => {
-    try {
-      const res = await apiGetPatients();
-      const data: Patient[] = res.data.data || [];
-      setPatients(data);
-      setFiltered(data);
-    } catch (err) {
-      showToast("Failed to load patients");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     let list = [...patients];
@@ -70,165 +63,206 @@ export default function PatientsPage() {
         list = list.filter((p) => !!p.insurance);
       else if (activeFilter === "Delivery")
         list = list.filter((p) => p.delivery);
-      else list = list.filter((p) => p.diseases?.includes(activeFilter));
+      else
+        list = list.filter((p) =>
+          p.diseases?.some((d) => d.includes(activeFilter)),
+        );
     }
     setFiltered(list);
   }, [search, activeFilter, patients]);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm("Delete " + name + "? This cannot be undone.")) return;
-    try {
-      await apiDeletePatient(id);
-      showToast("Patient deleted");
-      loadPatients();
-    } catch (err) {
-      showToast("Failed to delete patient");
-    }
-  };
-
   return (
     <PhoneShell>
-      <TopBar title="All Patients" backHref="/dashboard" />
-
-      {/* Search */}
-      <div className="mx-4 my-3 bg-white border-[1.5px] border-[#dce6f0] rounded-[10px] flex items-center px-3 py-2.5 gap-2">
-        <span className="text-gray-400 text-sm">Search</span>
-        <input
-          className="flex-1 border-none outline-none text-[13px]"
-          placeholder="Name, mobile, medicine, area..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {search && (
+      {/* Top bar */}
+      <div className="bg-[#1a6fc4] px-4 pt-4 pb-0">
+        <div className="flex items-center justify-between mb-3">
           <button
-            onClick={() => setSearch("")}
-            className="text-gray-400 text-sm"
+            onClick={() => router.push("/dashboard")}
+            className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold"
           >
-            x
+            &larr;
           </button>
-        )}
+          <h1 className="text-white font-extrabold text-[16px]">
+            All Patients
+          </h1>
+          <Link href="/patients/add">
+            <button className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+              +
+            </button>
+          </Link>
+        </div>
+        {/* Search inside blue header */}
+        <div className="bg-white/15 rounded-2xl flex items-center px-3 py-2.5 gap-2 mb-3">
+          <svg
+            className="w-4 h-4 text-white/60 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            className="flex-1 bg-transparent text-white placeholder-white/60 text-[13px] outline-none"
+            placeholder="Search name, mobile, medicine, area..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="text-white/60 font-bold text-sm"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        {/* Filter chips */}
+        <div className="flex gap-1.5 pb-3 overflow-x-auto scrollbar-hide">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all ${
+                activeFilter === f
+                  ? "bg-white text-[#1a6fc4]"
+                  : "bg-white/20 text-white"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Filter chips */}
-      <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide">
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap border-[1.5px] transition-all flex-shrink-0 ${
-              activeFilter === f
-                ? "bg-[#1a6fc4] border-[#1a6fc4] text-white"
-                : "bg-white border-[#dce6f0] text-gray-400"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* Count bar */}
-      <div className="px-4 py-2 flex items-center justify-between border-b border-[#dce6f0] bg-white">
+      {/* Count */}
+      <div className="px-4 py-2.5 bg-white border-b border-gray-100 flex items-center justify-between">
         <span className="text-[12px] font-bold text-gray-500">
-          {filtered.length} Patients
+          {filtered.length} patients
         </span>
         <Link href="/patients/add">
-          <button className="px-3 py-1.5 bg-[#1a6fc4] text-white rounded-lg text-[11px] font-bold">
+          <button className="text-[12px] font-bold text-[#1a6fc4] bg-[#e8f1fb] px-3 py-1.5 rounded-xl">
             + Add New
           </button>
         </Link>
       </div>
 
-      {/* Patient list */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide pt-2">
+      <div className="flex-1 overflow-y-auto scrollbar-hide bg-[#f5f8fc]">
         {loading ? (
           <Spinner />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-[14px] text-gray-400 mb-3">No patients found</p>
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 bg-[#e8f1fb] rounded-full flex items-center justify-center text-3xl mb-3">
+              👥
+            </div>
+            <p className="text-[14px] font-bold text-gray-500 mb-1">
+              No patients found
+            </p>
+            <p className="text-[12px] text-gray-400 mb-4">
+              Try a different search or filter
+            </p>
             <Link href="/patients/add">
-              <button className="px-4 py-2 bg-[#1a6fc4] text-white rounded-xl text-[13px] font-bold">
-                Add First Patient
+              <button className="px-5 py-2.5 bg-[#1a6fc4] text-white rounded-xl text-[13px] font-bold">
+                Add Patient
               </button>
             </Link>
           </div>
         ) : (
-          filtered.map((p) => (
-            <div key={p.id} className="mx-4 mb-2.5">
-              <Link href={`/patients/${p.id}`}>
-                <div
-                  className={`bg-white rounded-xl p-3 shadow-sm border-[1.5px] border-transparent hover:border-[#1a6fc4] transition-all cursor-pointer border-l-4 ${
-                    p.tag === "urgent"
-                      ? "border-l-red-500"
-                      : p.tag === "today"
-                        ? "border-l-orange-500"
-                        : p.tag === "missed"
-                          ? "border-l-gray-400"
+          <div className="p-3 flex flex-col gap-2">
+            {filtered.map((p) => (
+              <Link href={`/patients/${p.id}`} key={p.id}>
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 active:scale-[0.99] transition-transform">
+                  <div
+                    className={`h-1 w-full ${
+                      p.tag === "urgent"
+                        ? "bg-red-500"
+                        : p.tag === "today"
+                          ? "bg-orange-500"
                           : p.tag === "upcoming"
-                            ? "border-l-yellow-400"
-                            : "border-l-green-400"
-                  }`}
-                >
-                  {/* Row 1 */}
-                  <div className="flex items-start justify-between mb-1">
-                    <div>
-                      <p className="text-[14px] font-bold">{p.name}</p>
-                      <p className="text-[11px] text-gray-500">
-                        {p.mobile} · {p.area}
-                      </p>
+                            ? "bg-yellow-400"
+                            : p.tag === "missed"
+                              ? "bg-gray-400"
+                              : "bg-green-400"
+                    }`}
+                  />
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-extrabold text-[14px] flex-shrink-0 ${
+                            p.gender === "Female"
+                              ? "bg-pink-400"
+                              : "bg-[#1a6fc4]"
+                          }`}
+                        >
+                          {p.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-extrabold text-gray-800">
+                            {p.name}
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            {p.age} yrs · {p.area}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <Tag tag={p.tag} />
+                        <p
+                          className={`text-[11px] font-bold mt-1 ${
+                            p.days_left <= 0
+                              ? "text-red-500"
+                              : p.days_left <= 3
+                                ? "text-orange-500"
+                                : "text-green-600"
+                          }`}
+                        >
+                          {p.days_left <= 0
+                            ? "Finished"
+                            : `${p.days_left}d left`}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {p.diseases?.slice(0, 3).map((d) => (
+                        <span
+                          key={d}
+                          className="bg-[#e8f1fb] text-[#1a6fc4] text-[10px] font-bold px-2 py-0.5 rounded-lg"
+                        >
+                          {d}
+                        </span>
+                      ))}
+                      {p.delivery && (
+                        <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                          Delivery
+                        </span>
+                      )}
                       <span
-                        className={`text-[11px] font-bold ${
-                          p.days_left <= 0
-                            ? "text-red-500"
-                            : p.days_left <= 3
-                              ? "text-orange-500"
-                              : "text-green-600"
+                        className={`ml-auto text-[10px] font-bold capitalize ${
+                          p.reminder_status === "sent"
+                            ? "text-blue-500"
+                            : p.reminder_status === "purchased"
+                              ? "text-green-500"
+                              : p.reminder_status === "ignored"
+                                ? "text-orange-500"
+                                : "text-gray-300"
                         }`}
                       >
-                        {p.days_left <= 0 ? "Missed" : `${p.days_left}d left`}
+                        {p.reminder_status}
                       </span>
                     </div>
-                  </div>
-
-                  {/* Diseases */}
-                  <div className="flex gap-1 flex-wrap my-1">
-                    {p.diseases?.map((d) => (
-                      <span
-                        key={d}
-                        className="bg-[#e8f1fb] text-[#1a6fc4] text-[10px] font-bold px-1.5 py-0.5 rounded"
-                      >
-                        {d}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Row 3 */}
-                  <div className="flex items-center gap-2 mt-1">
-                    <Tag tag={p.tag} />
-                    {p.delivery && (
-                      <span className="text-[10px] font-bold bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
-                        Delivery
-                      </span>
-                    )}
-                    <span
-                      className={`text-[10px] font-bold ml-auto ${
-                        p.reminder_status === "sent"
-                          ? "text-blue-500"
-                          : p.reminder_status === "purchased"
-                            ? "text-green-600"
-                            : p.reminder_status === "ignored"
-                              ? "text-orange-500"
-                              : "text-gray-400"
-                      }`}
-                    >
-                      {p.reminder_status?.toUpperCase()}
-                    </span>
+                    <p className="text-[11px] text-gray-400 mt-1.5">
+                      {p.mobile} · Dr. {p.doctor}
+                    </p>
                   </div>
                 </div>
               </Link>
-            </div>
-          ))
+            ))}
+          </div>
         )}
         <div className="h-4" />
       </div>

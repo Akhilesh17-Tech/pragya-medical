@@ -4,8 +4,11 @@ export default function PhoneShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#eef4fb] flex justify-center items-start p-0 sm:p-5">
-      <div className="w-full sm:w-[390px] min-h-screen sm:min-h-[780px] bg-white sm:rounded-[28px] sm:shadow-2xl overflow-hidden flex flex-col relative">
+    <div className="min-h-screen bg-slate-100 flex justify-center items-start">
+      <div
+        className="w-full max-w-[430px] min-h-screen bg-white flex flex-col relative overflow-hidden"
+        style={{ boxShadow: "0 0 40px rgba(0,0,0,0.12)" }}
+      >
         {children}
       </div>
     </div>

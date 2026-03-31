@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Toast from "@/components/ui/Toast";
 
 export const metadata: Metadata = {
   title: "Pragya Medical",
@@ -14,10 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-        <Toast />
-      </body>
+      <body className="bg-slate-100">{children}</body>
     </html>
   );
 }

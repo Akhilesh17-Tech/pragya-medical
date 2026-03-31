@@ -15,17 +15,29 @@ export default function Toast() {
     _setToast = (m: string) => {
       setMsg(m);
       setShow(true);
-      setTimeout(() => setShow(false), 2500);
+      setTimeout(() => setShow(false), 2800);
     };
   }, []);
 
   return (
     <div
-      className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-[200] bg-[#2c3e50] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold whitespace-nowrap transition-all duration-300 pointer-events-none ${
-        show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+      className={`fixed bottom-24 left-1/2 z-[200] pointer-events-none transition-all duration-300 ${
+        show
+          ? "opacity-100 -translate-x-1/2 translate-y-0"
+          : "opacity-0 -translate-x-1/2 translate-y-2"
       }`}
     >
-      {msg}
+      <div
+        className="px-5 py-3 rounded-2xl text-white text-sm font-semibold whitespace-nowrap flex items-center gap-2.5"
+        style={{
+          background: "rgba(15,23,42,0.92)",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+        }}
+      >
+        <div className="w-1.5 h-1.5 bg-green-400 rounded-full flex-shrink-0" />
+        {msg}
+      </div>
     </div>
   );
 }
