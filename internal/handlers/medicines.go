@@ -11,67 +11,96 @@ import (
 )
 
 func AddMedicine(c *gin.Context) {
-	patientID := c.Param("id")
+    patientID := c.Param("id")
 
-	var input models.Medicine
-	if err := c.ShouldBindJSON(&input); err != nil {
-		helpers.BadRequest(c, err.Error())
-		return
-	}
+    var input MedicineInput  // ← Use string-based input
+    if err := c.ShouldBindJSON(&input); err != nil {
+        helpers.BadRequest(c, err.Error())
+        return
+    }
 
-	pid, err := uuid.Parse(patientID)
-	if err != nil {
-		helpers.BadRequest(c, "Invalid patient ID")
-		return
-	}
+    pid, err := uuid.Parse(patientID)
+    if err != nil {
+        helpers.BadRequest(c, "Invalid patient ID")
+        return
+    }
 
-	input.PatientID = pid
-	if input.StartDate.IsZero() {
-		input.StartDate = time.Now().Truncate(24 * time.Hour)
-	}
+    // Parse the date string
+    startDate := time.Now().Truncate(24 * time.Hour)
+    if input.StartDate != "" {
+        if parsed := parseDate(input.StartDate); parsed != nil {
+            startDate = *parsed
+        }
+    }
 
-	if err := config.DB.Create(&input).Error; err != nil {
-		helpers.ServerError(c, "Could not add medicine")
-		return
-	}
+    medicine := models.Medicine{
+        PatientID:   pid,
+        Brand:       input.Brand,
+        Composition: input.Composition,
+        Company:     input.Company,
+        Strength:    input.Strength,
+        DosageForm:  input.DosageForm,
+        Qty:         input.Qty,
+        DosePerDay:  input.DosePerDay,
+        StartDate:   startDate,
+    }
 
-	helpers.Created(c, gin.H{
-		"medicine":  input,
-		"days_left": input.DaysLeft(),
-		"end_date":  input.EndDate(),
-	})
+    if err := config.DB.Create(&medicine).Error; err != nil {
+        helpers.ServerError(c, "Could not add medicine")
+        return
+    }
+
+    helpers.Created(c, gin.H{
+        "medicine":  medicine,
+        "days_left": medicine.DaysLeft(),
+        "end_date":  medicine.EndDate(),
+    })
 }
 
 func UpdateMedicine(c *gin.Context) {
-	id := c.Param("id")
+    id := c.Param("id")
 
-	var medicine models.Medicine
-	if err := config.DB.Where("id = ?", id).First(&medicine).Error; err != nil {
-		helpers.NotFound(c, "Medicine not found")
-		return
-	}
+    var medicine models.Medicine
+    if err := config.DB.Where("id = ?", id).First(&medicine).Error; err != nil {
+        helpers.NotFound(c, "Medicine not found")
+        return
+    }
 
-	var updates map[string]any
-	if err := c.ShouldBindJSON(&updates); err != nil {
-		helpers.BadRequest(c, err.Error())
-		return
-	}
+    var input MedicineInput
+    if err := c.ShouldBindJSON(&input); err != nil {
+        helpers.BadRequest(c, err.Error())
+        return
+    }
 
-	delete(updates, "id")
-	delete(updates, "patient_id")
-	delete(updates, "created_at")
+    // Build updates map with proper type handling
+    updates := map[string]any{
+        "brand":       input.Brand,
+        "composition": input.Composition,
+        "company":     input.Company,
+        "strength":    input.Strength,
+        "dosage_form": input.DosageForm,
+        "qty":         input.Qty,
+        "dose_per_day": input.DosePerDay,
+    }
 
-	if err := config.DB.Model(&medicine).Updates(updates).Error; err != nil {
-		helpers.ServerError(c, "Could not update medicine")
-		return
-	}
+    // Parse the date string if provided
+    if input.StartDate != "" {
+        if parsed := parseDate(input.StartDate); parsed != nil {
+            updates["start_date"] = *parsed
+        }
+    }
 
-	config.DB.Where("id = ?", medicine.ID).First(&medicine)
-	helpers.Success(c, gin.H{
-		"medicine":  medicine,
-		"days_left": medicine.DaysLeft(),
-		"end_date":  medicine.EndDate(),
-	})
+    if err := config.DB.Model(&medicine).Updates(updates).Error; err != nil {
+        helpers.ServerError(c, "Could not update medicine")
+        return
+    }
+
+    config.DB.Where("id = ?", medicine.ID).First(&medicine)
+    helpers.Success(c, gin.H{
+        "medicine":  medicine,
+        "days_left": medicine.DaysLeft(),
+        "end_date":  medicine.EndDate(),
+    })
 }
 
 func DeleteMedicine(c *gin.Context) {
