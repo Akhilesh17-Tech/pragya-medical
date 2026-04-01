@@ -6,6 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import Toast, { showToast } from "@/components/ui/Toast";
 import { DISEASES } from "@/lib/utils";
 import { COLORS } from "@/lib/theme";
+import MedicineSearch from "@/components/ui/MedicineSearch";
 
 const STEPS = ["Basic Info", "Diseases", "Medicines", "Delivery", "Review"];
 
@@ -647,36 +648,33 @@ export default function AddPatientPage() {
                   >
                     <div>
                       <label style={lbl}>Brand Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Norvasc, Glycomet"
+                      <MedicineSearch
                         value={m.brand}
-                        onChange={(e) => updateMed(i, "brand", e.target.value)}
-                        style={inp()}
-                        onFocus={(e) =>
-                          (e.target.style.borderColor = COLORS.primary)
-                        }
-                        onBlur={(e) =>
-                          (e.target.style.borderColor = COLORS.border)
-                        }
+                        onChange={(val) => updateMed(i, "brand", val)}
+                        onSelect={(item) => {
+                          // Auto-fill all medicine fields when selected from inventory
+                          updateMed(i, "brand", item.brand);
+                          updateMed(i, "composition", item.composition);
+                          updateMed(i, "company", item.company);
+                          updateMed(i, "strength", item.strength);
+                          updateMed(i, "dosage_form", item.dosage_form);
+                        }}
+                        field="brand"
+                        placeholder="Type brand name..."
                       />
                     </div>
                     <div>
                       <label style={lbl}>Composition / Salt Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Amlodipine, Metformin"
+                      <MedicineSearch
                         value={m.composition}
-                        onChange={(e) =>
-                          updateMed(i, "composition", e.target.value)
-                        }
-                        style={inp()}
-                        onFocus={(e) =>
-                          (e.target.style.borderColor = COLORS.primary)
-                        }
-                        onBlur={(e) =>
-                          (e.target.style.borderColor = COLORS.border)
-                        }
+                        onChange={(val) => updateMed(i, "composition", val)}
+                        onSelect={(item) => {
+                          updateMed(i, "brand", item.brand);
+                          updateMed(i, "composition", item.composition);
+                          updateMed(i, "strength", item.strength);
+                        }}
+                        field="composition"
+                        placeholder="Type salt name (e.g. Telmisartan)..."
                       />
                     </div>
                     <div

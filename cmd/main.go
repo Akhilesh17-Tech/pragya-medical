@@ -60,6 +60,15 @@ func main() {
 		protected.GET("/analytics", handlers.GetAnalytics)
 		protected.GET("/settings", handlers.GetSettings)
 		protected.PUT("/settings", handlers.UpdateSettings)
+		// Inventory
+		protected.GET("/inventory", handlers.GetInventory)
+		protected.GET("/inventory/search", handlers.SearchInventory)
+		protected.POST("/inventory", handlers.CreateInventoryItem)
+		protected.PUT("/inventory/:id", handlers.UpdateInventoryItem)
+		protected.DELETE("/inventory/:id", handlers.DeleteInventoryItem)
+		protected.POST("/inventory/:id/stock", handlers.UpdateStock)
+		protected.GET("/inventory/:id/movements", handlers.GetStockMovements)
+		protected.DELETE("/invoices/:id", handlers.DeleteInvoice)
 	}
 
 	port := os.Getenv("PORT")
