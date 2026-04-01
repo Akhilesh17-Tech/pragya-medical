@@ -3,11 +3,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { apiGetSettings, apiUpdateSettings } from "@/lib/api";
-import PhoneShell from "@/components/layout/PhoneShell";
-import TopBar from "@/components/layout/TopBar";
-import BottomNav from "@/components/layout/BottomNav";
-import Toast, { showToast } from "@/components/ui/Toast";
+import AppShell from "@/components/layout/AppShell";
 import Spinner from "@/components/ui/Spinner";
+import Toast, { showToast } from "@/components/ui/Toast";
+import { COLORS } from "@/lib/theme";
 import type { Settings } from "@/types";
 
 export default function SettingsPage() {
@@ -15,6 +14,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
+  const user = auth.getUser();
 
   useEffect(() => {
     if (!auth.isLoggedIn()) {
@@ -27,9 +27,8 @@ export default function SettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const update = (field: keyof Settings, value: any) => {
+  const update = (field: keyof Settings, value: any) =>
     setSettings((prev) => (prev ? { ...prev, [field]: value } : prev));
-  };
 
   const handleSave = async () => {
     if (!settings) return;
@@ -37,17 +36,48 @@ export default function SettingsPage() {
     try {
       await apiUpdateSettings(settings);
       showToast("Settings saved successfully");
-    } catch (err) {
-      showToast("Failed to save settings");
+    } catch {
+      showToast("Failed to save");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleLogout = () => {
-    if (!confirm("Logout?")) return;
-    auth.logout();
+  const sectionCard: React.CSSProperties = {
+    background: "white",
+    borderRadius: 16,
+    border: `1px solid ${COLORS.border}`,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+    marginBottom: 12,
+    overflow: "hidden",
   };
+  const sectionHeader = (title: string, subtitle?: string) => (
+    <div
+      style={{
+        padding: "12px 16px",
+        background: "#FAFBFC",
+        borderBottom: `1px solid ${COLORS.border}`,
+      }}
+    >
+      <p
+        style={{
+          fontSize: 12,
+          fontWeight: 800,
+          color: COLORS.primary,
+          textTransform: "uppercase" as const,
+          letterSpacing: 1,
+          margin: 0,
+        }}
+      >
+        {title}
+      </p>
+      {subtitle && (
+        <p style={{ fontSize: 11, color: COLORS.textMuted, margin: "3px 0 0" }}>
+          {subtitle}
+        </p>
+      )}
+    </div>
+  );
 
   const Toggle = ({
     value,
@@ -56,18 +86,43 @@ export default function SettingsPage() {
     value: boolean;
     onChange: (v: boolean) => void;
   }) => (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        className="sr-only peer"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#1a6fc4] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
-    </label>
+    <div
+      onClick={() => onChange(!value)}
+      style={{
+        cursor: "pointer",
+        position: "relative",
+        width: 48,
+        height: 26,
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: 13,
+          background: value ? COLORS.primary : "#CBD5E1",
+          transition: "background 0.2s",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 3,
+            left: value ? 25 : 3,
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: "white",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+            transition: "left 0.2s",
+          }}
+        />
+      </div>
+    </div>
   );
 
-  const ChipGroup = ({
+  const Chips = ({
     options,
     value,
     onChange,
@@ -76,16 +131,24 @@ export default function SettingsPage() {
     value: string;
     onChange: (v: string) => void;
   }) => (
-    <div className="flex gap-2 flex-wrap">
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {options.map((o) => (
         <button
           key={o}
           onClick={() => onChange(o)}
-          className={`px-3 py-1.5 rounded-full text-[12px] font-bold border-[1.5px] transition-all capitalize ${
-            value === o
-              ? "bg-[#1a6fc4] border-[#1a6fc4] text-white"
-              : "bg-white border-[#dce6f0] text-gray-500"
-          }`}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: 700,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "Inter, sans-serif",
+            background: value === o ? COLORS.primary : "#F1F5F9",
+            color: value === o ? "white" : COLORS.textSecondary,
+            boxShadow: value === o ? `0 2px 8px ${COLORS.primary}50` : "none",
+            textTransform: "capitalize" as const,
+          }}
         >
           {o}
         </button>
@@ -93,150 +156,334 @@ export default function SettingsPage() {
     </div>
   );
 
-  return (
-    <PhoneShell>
-      <TopBar title="Settings" backHref="/dashboard" />
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {loading || !settings ? (
-          <Spinner />
-        ) : (
-          <>
-            {/* Auto reminder */}
-            <Section title="Reminder Settings">
-              <Row
-                label="Enable Auto Reminder"
-                sub="System sends reminders automatically"
-              >
-                <Toggle
-                  value={settings.auto_reminder_on}
-                  onChange={(v) => update("auto_reminder_on", v)}
-                />
-              </Row>
-              <Row label="Daily Auto Reminder">
-                <Toggle
-                  value={settings.daily_auto}
-                  onChange={(v) => update("daily_auto", v)}
-                />
-              </Row>
-              <div className="pt-2">
-                <p className="text-[12px] font-bold text-gray-500 mb-2">
-                  Send Reminder Before
-                </p>
-                <ChipGroup
-                  options={["7", "5", "3", "1"]}
-                  value={String(settings.remind_before_days)}
-                  onChange={(v) => update("remind_before_days", parseInt(v))}
-                />
-              </div>
-            </Section>
+  const DayChips = ({
+    value,
+    onChange,
+  }: {
+    value: number;
+    onChange: (v: number) => void;
+  }) => (
+    <div style={{ display: "flex", gap: 8 }}>
+      {[7, 5, 3, 1].map((d) => (
+        <button
+          key={d}
+          onClick={() => onChange(d)}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            fontSize: 15,
+            fontWeight: 800,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "Inter, sans-serif",
+            background: value === d ? COLORS.primary : "#F1F5F9",
+            color: value === d ? "white" : COLORS.textSecondary,
+            boxShadow: value === d ? `0 2px 8px ${COLORS.primary}50` : "none",
+          }}
+        >
+          {d}
+        </button>
+      ))}
+    </div>
+  );
 
-            {/* Mode & time */}
-            <Section title="Reminder Mode">
-              <div className="mb-3">
-                <p className="text-[12px] font-bold text-gray-500 mb-2">
-                  Default Channel
-                </p>
-                <ChipGroup
-                  options={["whatsapp", "sms", "call"]}
-                  value={settings.reminder_mode}
-                  onChange={(v) => update("reminder_mode", v as any)}
-                />
+  if (loading)
+    return (
+      <AppShell title="Settings">
+        <Spinner />
+      </AppShell>
+    );
+  if (!settings) return null;
+
+  return (
+    <AppShell title="Settings">
+      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: 16 }}>
+        {/* User profile card */}
+        <div style={{ ...sectionCard, marginBottom: 12 }}>
+          <div
+            style={{
+              background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+              padding: 16,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.2)",
+                  border: "2px solid rgba(255,255,255,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 22,
+                  fontWeight: 900,
+                  color: "white",
+                }}
+              >
+                {user?.name?.charAt(0) || "A"}
               </div>
               <div>
-                <p className="text-[12px] font-bold text-gray-500 mb-2">
-                  Default Time
+                <p
+                  style={{
+                    color: "white",
+                    fontSize: 16,
+                    fontWeight: 800,
+                    margin: "0 0 3px",
+                  }}
+                >
+                  {user?.name}
                 </p>
-                <ChipGroup
-                  options={["morning", "afternoon", "evening"]}
-                  value={settings.reminder_time}
-                  onChange={(v) => update("reminder_time", v as any)}
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.65)",
+                    fontSize: 12,
+                    margin: "0 0 3px",
+                  }}
+                >
+                  {user?.email}
+                </p>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 11,
+                    margin: 0,
+                  }}
+                >
+                  {user?.pharmacy_name}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Reminder toggles */}
+        <div style={sectionCard}>
+          {sectionHeader(
+            "Auto Reminders",
+            "Configure automatic reminder behavior",
+          )}
+          <div style={{ padding: "4px 16px 12px" }}>
+            {[
+              {
+                label: "Enable Auto Reminder",
+                sub: "System sends reminders automatically",
+                field: "auto_reminder_on" as const,
+              },
+              {
+                label: "Daily Auto Reminder",
+                sub: "Run reminder check every day",
+                field: "daily_auto" as const,
+              },
+            ].map((row) => (
+              <div
+                key={row.field}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 0",
+                  borderBottom: "1px solid #F8FAFC",
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: COLORS.textPrimary,
+                      margin: "0 0 2px",
+                    }}
+                  >
+                    {row.label}
+                  </p>
+                  <p
+                    style={{ fontSize: 11, color: COLORS.textMuted, margin: 0 }}
+                  >
+                    {row.sub}
+                  </p>
+                </div>
+                <Toggle
+                  value={settings[row.field] as boolean}
+                  onChange={(v) => update(row.field, v)}
                 />
               </div>
-            </Section>
+            ))}
+            <div style={{ paddingTop: 14 }}>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: COLORS.textSecondary,
+                  margin: "0 0 10px",
+                }}
+              >
+                Send reminder before (days)
+              </p>
+              <DayChips
+                value={settings.remind_before_days}
+                onChange={(v) => update("remind_before_days", v)}
+              />
+            </div>
+          </div>
+        </div>
 
-            {/* Schedule time */}
-            <Section title="Scheduled Time">
+        {/* Channel & time */}
+        <div style={sectionCard}>
+          {sectionHeader("Channel & Timing", "How and when to send reminders")}
+          <div
+            style={{
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: COLORS.textSecondary,
+                  margin: "0 0 10px",
+                }}
+              >
+                Default Channel
+              </p>
+              <Chips
+                options={["whatsapp", "sms", "call"]}
+                value={settings.reminder_mode}
+                onChange={(v) => update("reminder_mode", v as any)}
+              />
+            </div>
+            <div>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: COLORS.textSecondary,
+                  margin: "0 0 10px",
+                }}
+              >
+                Preferred Time
+              </p>
+              <Chips
+                options={["morning", "afternoon", "evening"]}
+                value={settings.reminder_time}
+                onChange={(v) => update("reminder_time", v as any)}
+              />
+            </div>
+            <div>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: COLORS.textSecondary,
+                  margin: "0 0 8px",
+                }}
+              >
+                Scheduled Time
+              </p>
               <input
                 type="time"
                 value={settings.scheduled_time}
                 onChange={(e) => update("scheduled_time", e.target.value)}
-                className="w-full px-3 py-2.5 border-[1.5px] border-[#dce6f0] rounded-xl text-[14px] outline-none focus:border-[#1a6fc4]"
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: `1.5px solid ${COLORS.border}`,
+                  fontSize: 14,
+                  fontFamily: "Inter, sans-serif",
+                  outline: "none",
+                  background: "white",
+                  boxSizing: "border-box" as const,
+                }}
+                onFocus={(e) => (e.target.style.borderColor = COLORS.primary)}
+                onBlur={(e) => (e.target.style.borderColor = COLORS.border)}
               />
-            </Section>
-
-            {/* WhatsApp template */}
-            <Section title="WhatsApp Message Template">
-              <p className="text-[11px] text-gray-400 mb-2">
-                Use {"{name}"}, {"{medicine}"}, {"{days}"} as variables
-              </p>
-              <textarea
-                value={settings.wa_template}
-                onChange={(e) => update("wa_template", e.target.value)}
-                rows={6}
-                className="w-full px-3 py-2.5 border-[1.5px] border-[#dce6f0] rounded-xl text-[12px] outline-none focus:border-[#1a6fc4] resize-none"
-              />
-            </Section>
-
-            {/* Save */}
-            <div className="px-4 pb-2">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full py-3 bg-[#1a6fc4] text-white rounded-xl font-bold text-[14px] disabled:opacity-60"
-              >
-                {saving ? "Saving..." : "Save Settings"}
-              </button>
             </div>
+          </div>
+        </div>
 
-            {/* Logout */}
-            <div className="px-4 pb-6">
-              <button
-                onClick={handleLogout}
-                className="w-full py-3 bg-red-50 text-red-500 border-[1.5px] border-red-200 rounded-xl font-bold text-[14px]"
-              >
-                Logout
-              </button>
-            </div>
-          </>
-        )}
+        {/* WA Template */}
+        <div style={sectionCard}>
+          {sectionHeader(
+            "WhatsApp Template",
+            "Use {name}, {medicine}, {days} as variables",
+          )}
+          <div style={{ padding: 16 }}>
+            <textarea
+              value={settings.wa_template}
+              onChange={(e) => update("wa_template", e.target.value)}
+              rows={6}
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: `1.5px solid ${COLORS.border}`,
+                fontSize: 13,
+                fontFamily: "Inter, sans-serif",
+                outline: "none",
+                resize: "none" as const,
+                lineHeight: 1.6,
+                boxSizing: "border-box" as const,
+              }}
+              onFocus={(e) => (e.target.style.borderColor = COLORS.primary)}
+              onBlur={(e) => (e.target.style.borderColor = COLORS.border)}
+            />
+          </div>
+        </div>
+
+        {/* Save button */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            width: "100%",
+            padding: 15,
+            borderRadius: 14,
+            border: "none",
+            background: saving
+              ? "#90A4AE"
+              : `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+            color: "white",
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: saving ? "not-allowed" : "pointer",
+            fontFamily: "Inter, sans-serif",
+            boxShadow: saving ? "none" : "0 4px 12px rgba(21,101,192,0.3)",
+            marginBottom: 10,
+          }}
+        >
+          {saving ? "Saving..." : "Save Settings"}
+        </button>
+
+        {/* Logout */}
+        <button
+          onClick={() => {
+            if (confirm("Sign out?")) auth.logout();
+          }}
+          style={{
+            width: "100%",
+            padding: 14,
+            borderRadius: 14,
+            background: "#FFF5F5",
+            color: "#C62828",
+            border: "1.5px solid #FFCDD2",
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          Sign Out
+        </button>
+
+        <div style={{ height: 16 }} />
       </div>
-      <BottomNav />
-      <Toast />
-    </PhoneShell>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="px-4 py-3 border-b border-[#dce6f0]">
-      <p className="text-[13px] font-extrabold text-[#2c3e50] mb-3">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function Row({
-  label,
-  sub,
-  children,
-}: {
-  label: string;
-  sub?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-      <div>
-        <p className="text-[13px] font-semibold">{label}</p>
-        {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
-      </div>
-      {children}
-    </div>
+    </AppShell>
   );
 }

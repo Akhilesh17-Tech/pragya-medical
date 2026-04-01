@@ -2,18 +2,16 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pragya Medical",
-  description: "Patient Reminder System",
+  title: "Pragya Medical — Patient Reminder System",
+  description: "Manage patients, medicines, reminders and invoices",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-slate-100">{children}</body>
+      <body style={{ margin: 0, padding: 0, background: "#f0f4f8", fontFamily: "'Inter', sans-serif" }}>
+        {children}
+      </body>
     </html>
   );
 }

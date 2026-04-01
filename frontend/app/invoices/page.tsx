@@ -11,6 +11,7 @@ import Toast, { showToast } from "@/components/ui/Toast";
 import Spinner from "@/components/ui/Spinner";
 import { formatDate } from "@/lib/utils";
 import type { Invoice } from "@/types";
+import AppShell from "@/components/layout/AppShell";
 
 const STATUS_CONFIG = {
   purchased_us: {
@@ -67,7 +68,7 @@ export default function InvoicesPage() {
   const otherOrPending = total - fromUs;
 
   return (
-    <PhoneShell>
+    <AppShell title="Invoices">
       <TopBar
         title="Invoices"
         backHref="/dashboard"
@@ -211,6 +212,6 @@ export default function InvoicesPage() {
 
       <BottomNav />
       <Toast />
-    </PhoneShell>
+    </AppShell>
   );
 }

@@ -2,18 +2,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiCreatePatient } from "@/lib/api";
-import PhoneShell from "@/components/layout/PhoneShell";
-import TopBar from "@/components/layout/TopBar";
-import BottomNav from "@/components/layout/BottomNav";
+import AppShell from "@/components/layout/AppShell";
 import Toast, { showToast } from "@/components/ui/Toast";
 import { DISEASES } from "@/lib/utils";
+import { COLORS } from "@/lib/theme";
 
 const STEPS = ["Basic Info", "Diseases", "Medicines", "Delivery", "Review"];
-
-const inputCls =
-  "w-full px-3 py-2.5 border-[1.5px] border-[#dce6f0] rounded-xl text-[13px] outline-none focus:border-[#1a6fc4] transition-colors bg-white";
-const labelCls =
-  "block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1";
 
 interface MedRow {
   brand: string;
@@ -36,6 +30,31 @@ const emptyMed = (): MedRow => ({
   dose_per_day: 1,
   start_date: new Date().toISOString().split("T")[0],
 });
+
+const inp = (extra?: object): React.CSSProperties => ({
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 12,
+  border: `1.5px solid ${COLORS.border}`,
+  fontSize: 13,
+  fontFamily: "Inter, sans-serif",
+  outline: "none",
+  background: "white",
+  color: COLORS.textPrimary,
+  transition: "border-color 0.2s",
+  boxSizing: "border-box" as const,
+  ...extra,
+});
+
+const lbl: React.CSSProperties = {
+  display: "block",
+  fontSize: 11,
+  fontWeight: 700,
+  color: COLORS.textSecondary,
+  textTransform: "uppercase" as const,
+  letterSpacing: 0.8,
+  marginBottom: 6,
+};
 
 export default function AddPatientPage() {
   const router = useRouter();
@@ -115,7 +134,7 @@ export default function AddPatientPage() {
         notes,
         is_draft: isDraft,
       });
-      showToast(isDraft ? "Saved as draft" : "Patient added!");
+      showToast(isDraft ? "Saved as draft" : "Patient added successfully!");
       setTimeout(() => router.push("/patients"), 700);
     } catch (err) {
       const e = err as any;
@@ -125,99 +144,236 @@ export default function AddPatientPage() {
     }
   };
 
+  const sectionStyle: React.CSSProperties = {
+    background: "white",
+    borderRadius: 16,
+    padding: 16,
+    border: `1px solid ${COLORS.border}`,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+  };
+
+  const sectionTitle = (
+    title: string,
+    color = COLORS.primary,
+  ): React.CSSProperties => ({
+    fontSize: 11,
+    fontWeight: 800,
+    color,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    margin: "0 0 14px",
+  });
+
   return (
-    <PhoneShell>
-      <TopBar title="Add Patient" backHref="/patients" />
-
-      {/* Step dots */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center justify-between mb-2">
-          {STEPS.map((s, i) => (
-            <div key={i} className="flex items-center flex-1">
+    <AppShell title={`Add Patient — Step ${step + 1}`}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+        {/* Step progress */}
+        <div
+          style={{
+            background: "white",
+            padding: "14px 16px",
+            borderBottom: `1px solid ${COLORS.border}`,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 10,
+            }}
+          >
+            {STEPS.map((s, i) => (
               <div
-                onClick={() => i < step && setStep(i)}
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold flex-shrink-0 transition-all ${
-                  i < step
-                    ? "bg-green-500 text-white cursor-pointer"
-                    : i === step
-                      ? "bg-[#1a6fc4] text-white"
-                      : "bg-gray-100 text-gray-400"
-                }`}
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: i < STEPS.length - 1 ? 1 : "none",
+                }}
               >
-                {i < step ? "✓" : i + 1}
-              </div>
-              {i < STEPS.length - 1 && (
                 <div
-                  className={`flex-1 h-0.5 mx-1 ${i < step ? "bg-green-400" : "bg-gray-100"}`}
-                />
-              )}
-            </div>
-          ))}
+                  onClick={() => i < step && setStep(i)}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: i < step ? "pointer" : "default",
+                    transition: "all 0.2s",
+                    background:
+                      i < step
+                        ? "#E8F5E9"
+                        : i === step
+                          ? COLORS.primary
+                          : "#F1F5F9",
+                    color:
+                      i < step
+                        ? "#2E7D32"
+                        : i === step
+                          ? "white"
+                          : COLORS.textMuted,
+                    border:
+                      i < step
+                        ? "2px solid #A5D6A7"
+                        : i === step
+                          ? `2px solid ${COLORS.primary}`
+                          : "2px solid transparent",
+                  }}
+                >
+                  {i < step ? "✓" : i + 1}
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 2,
+                      margin: "0 4px",
+                      background: i < step ? "#A5D6A7" : "#E0E7EF",
+                      borderRadius: 1,
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <p
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: COLORS.textPrimary,
+                margin: 0,
+              }}
+            >
+              {STEPS[step]}
+            </p>
+            <p style={{ fontSize: 11, color: COLORS.textMuted, margin: 0 }}>
+              Step {step + 1} of {STEPS.length}
+            </p>
+          </div>
         </div>
-        <p className="text-center text-[12px] font-bold text-[#1a6fc4]">
-          {STEPS[step]}
-        </p>
-      </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="px-4 py-4">
-          {/* STEP 1 */}
+        <div
+          style={{
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          {/* STEP 1 — Basic Info */}
           {step === 0 && (
-            <div className="flex flex-col gap-4">
-              <div className="bg-[#e8f1fb] rounded-2xl p-4 border border-[#c5d9f0]">
-                <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wider mb-3">
-                  Patient Information
+            <>
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Personal Information")}>
+                  Personal Information
                 </p>
-                <div className="flex flex-col gap-3">
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                >
                   <div>
-                    <label className={labelCls}>Full Name *</label>
+                    <label style={lbl}>Full Name *</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Patient full name"
-                      className={inputCls}
+                      placeholder="Enter patient's full name"
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 10,
+                    }}
+                  >
                     <div>
-                      <label className={labelCls}>Mobile</label>
+                      <label style={lbl}>Mobile Number</label>
                       <input
                         type="tel"
                         value={mobile}
                         onChange={(e) => setMobile(e.target.value)}
-                        placeholder="Mobile number"
-                        className={inputCls}
+                        placeholder="10-digit number"
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>WhatsApp</label>
+                      <label style={lbl}>WhatsApp</label>
                       <input
                         type="tel"
                         value={whatsapp}
                         onChange={(e) => setWhatsapp(e.target.value)}
                         placeholder="If different"
-                        className={inputCls}
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 10,
+                    }}
+                  >
                     <div>
-                      <label className={labelCls}>Age</label>
+                      <label style={lbl}>Age</label>
                       <input
                         type="number"
                         value={age}
                         onChange={(e) => setAge(e.target.value)}
                         placeholder="Years"
-                        className={inputCls}
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>Gender</label>
+                      <label style={lbl}>Gender</label>
                       <select
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
-                        className={inputCls}
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       >
                         <option>Male</option>
                         <option>Female</option>
@@ -225,281 +381,614 @@ export default function AddPatientPage() {
                       </select>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Location & Doctor")}>
+                  Location & Doctor
+                </p>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                >
                   <div>
-                    <label className={labelCls}>Area / Locality</label>
+                    <label style={lbl}>Area / Locality</label>
                     <input
                       type="text"
                       value={area}
                       onChange={(e) => setArea(e.target.value)}
-                      placeholder="e.g. Mohalla A, Sector 5"
-                      className={inputCls}
+                      placeholder="e.g. Mohalla A, Sector 5, Civil Lines"
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Full Address</label>
+                    <label style={lbl}>Full Address</label>
                     <input
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Street, landmark"
-                      className={inputCls}
+                      placeholder="Street, landmark, city"
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Doctor Name</label>
+                    <label style={lbl}>Doctor Name</label>
                     <input
                       type="text"
                       value={doctor}
                       onChange={(e) => setDoctor(e.target.value)}
                       placeholder="Dr. Full Name"
-                      className={inputCls}
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
-          {/* STEP 2 */}
+          {/* STEP 2 — Diseases */}
           {step === 1 && (
-            <div className="flex flex-col gap-4">
-              <div className="bg-[#e8f1fb] rounded-2xl p-4 border border-[#c5d9f0]">
-                <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wider mb-3">
-                  Disease / Condition
+            <>
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Primary Condition")}>
+                  Primary Condition
                 </p>
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <label className={labelCls}>Primary Disease</label>
-                    <select
-                      value={primaryDisease}
-                      onChange={(e) => setPrimary(e.target.value)}
-                      className={inputCls}
-                    >
-                      <option value="">-- Select --</option>
-                      {DISEASES.map((d) => (
-                        <option key={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelCls}>All Conditions</label>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
-                      {DISEASES.filter((d) => d !== "Other").map((d) => (
-                        <label
-                          key={d}
-                          className={`flex items-center gap-2 p-2.5 rounded-xl border-[1.5px] cursor-pointer text-[12px] font-semibold transition-all ${
-                            diseases.includes(d)
-                              ? "border-[#1a6fc4] bg-white text-[#1a6fc4]"
-                              : "border-[#dce6f0] bg-white text-gray-600"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={diseases.includes(d)}
-                            onChange={() => toggleDisease(d)}
-                            className="accent-[#1a6fc4]"
-                          />
-                          {d}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                <div>
+                  <label style={lbl}>Primary Disease</label>
+                  <select
+                    value={primaryDisease}
+                    onChange={(e) => setPrimary(e.target.value)}
+                    style={inp()}
+                    onFocus={(e) =>
+                      (e.target.style.borderColor = COLORS.primary)
+                    }
+                    onBlur={(e) => (e.target.style.borderColor = COLORS.border)}
+                  >
+                    <option value="">-- Select Primary Disease --</option>
+                    {DISEASES.map((d) => (
+                      <option key={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              <div className="bg-[#fff8e8] rounded-2xl p-4 border border-yellow-200">
-                <p className="text-[11px] font-extrabold text-orange-500 uppercase tracking-wider mb-3">
+
+              <div style={sectionStyle}>
+                <p style={sectionTitle("All Conditions")}>
+                  All Conditions (select all that apply)
+                </p>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 8,
+                  }}
+                >
+                  {DISEASES.filter((d) => d !== "Other").map((d) => (
+                    <label
+                      key={d}
+                      onClick={() => toggleDisease(d)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        background: diseases.includes(d)
+                          ? COLORS.primaryLight
+                          : "#F8FAFC",
+                        border: `1.5px solid ${diseases.includes(d) ? COLORS.primary : COLORS.border}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 5,
+                          flexShrink: 0,
+                          background: diseases.includes(d)
+                            ? COLORS.primary
+                            : "white",
+                          border: `2px solid ${diseases.includes(d) ? COLORS.primary : COLORS.border}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {diseases.includes(d) && (
+                          <span
+                            style={{
+                              color: "white",
+                              fontSize: 11,
+                              fontWeight: 900,
+                            }}
+                          >
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: diseases.includes(d)
+                            ? COLORS.primary
+                            : COLORS.textPrimary,
+                        }}
+                      >
+                        {d}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Insurance (Optional)", "#E65100")}>
                   Insurance (Optional)
                 </p>
-                <div className="flex flex-col gap-3">
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
                   <div>
-                    <label className={labelCls}>Insurance Company</label>
+                    <label style={lbl}>Insurance Company</label>
                     <input
                       type="text"
                       value={insurance}
                       onChange={(e) => setInsurance(e.target.value)}
                       placeholder="e.g. Star Health, HDFC Ergo"
-                      className={inputCls}
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Expiry Date</label>
+                    <label style={lbl}>Expiry Date</label>
                     <input
                       type="date"
                       value={insuranceDate}
                       onChange={(e) => setInsuranceDate(e.target.value)}
-                      className={inputCls}
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
-          {/* STEP 3 */}
+          {/* STEP 3 — Medicines */}
           {step === 2 && (
-            <div className="flex flex-col gap-3">
+            <>
               {medicines.map((m, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl border border-[#dce6f0] overflow-hidden shadow-sm"
+                  style={{
+                    background: "white",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    border: `1px solid ${COLORS.border}`,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                  }}
                 >
-                  <div className="bg-[#1a6fc4] px-4 py-2.5 flex items-center justify-between">
-                    <span className="text-white text-[12px] font-extrabold">
+                  <div
+                    style={{
+                      background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+                      padding: "10px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <p
+                      style={{
+                        color: "white",
+                        fontSize: 13,
+                        fontWeight: 800,
+                        margin: 0,
+                      }}
+                    >
                       Medicine {i + 1}
-                    </span>
+                    </p>
                     {medicines.length > 1 && (
                       <button
                         onClick={() => removeMed(i)}
-                        className="text-white/70 text-[11px] font-bold hover:text-white"
+                        style={{
+                          background: "rgba(255,255,255,0.2)",
+                          border: "1px solid rgba(255,255,255,0.3)",
+                          color: "white",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "4px 10px",
+                          borderRadius: 8,
+                          cursor: "pointer",
+                          fontFamily: "Inter, sans-serif",
+                        }}
                       >
                         Remove
                       </button>
                     )}
                   </div>
-                  <div className="p-3 flex flex-col gap-2">
-                    <input
-                      type="text"
-                      placeholder="Brand Name (e.g. Norvasc)"
-                      value={m.brand}
-                      onChange={(e) => updateMed(i, "brand", e.target.value)}
-                      className={inputCls}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Composition / Salt Name"
-                      value={m.composition}
-                      onChange={(e) =>
-                        updateMed(i, "composition", e.target.value)
-                      }
-                      className={inputCls}
-                    />
-                    <div className="grid grid-cols-2 gap-2">
+                  <div
+                    style={{
+                      padding: 14,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    <div>
+                      <label style={lbl}>Brand Name</label>
                       <input
                         type="text"
-                        placeholder="Strength (5mg)"
-                        value={m.strength}
-                        onChange={(e) =>
-                          updateMed(i, "strength", e.target.value)
+                        placeholder="e.g. Norvasc, Glycomet"
+                        value={m.brand}
+                        onChange={(e) => updateMed(i, "brand", e.target.value)}
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
                         }
-                        className={inputCls}
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       />
-                      <select
-                        value={m.dosage_form}
-                        onChange={(e) =>
-                          updateMed(i, "dosage_form", e.target.value)
-                        }
-                        className={inputCls}
-                      >
-                        {[
-                          ["tablet", "Tablet"],
-                          ["capsule", "Capsule"],
-                          ["syrup", "Syrup"],
-                          ["powder", "Powder"],
-                          ["drops", "Drops"],
-                          ["injection", "Injection"],
-                          ["inhaler", "Inhaler"],
-                          ["cream", "Cream/Gel"],
-                          ["other", "Other"],
-                        ].map(([v, l]) => (
-                          <option key={v} value={v}>
-                            {l}
-                          </option>
-                        ))}
-                      </select>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label style={lbl}>Composition / Salt Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Amlodipine, Metformin"
+                        value={m.composition}
+                        onChange={(e) =>
+                          updateMed(i, "composition", e.target.value)
+                        }
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 10,
+                      }}
+                    >
                       <div>
-                        <label className={labelCls}>Quantity</label>
+                        <label style={lbl}>Strength</label>
                         <input
-                          type="number"
-                          value={m.qty}
+                          type="text"
+                          placeholder="e.g. 5mg, 500mg"
+                          value={m.strength}
                           onChange={(e) =>
-                            updateMed(i, "qty", parseFloat(e.target.value) || 0)
+                            updateMed(i, "strength", e.target.value)
                           }
-                          className={inputCls}
+                          style={inp()}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = COLORS.primary)
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = COLORS.border)
+                          }
                         />
                       </div>
                       <div>
-                        <label className={labelCls}>Dose/Day</label>
+                        <label style={lbl}>Dosage Form</label>
                         <select
-                          value={m.dose_per_day}
+                          value={m.dosage_form}
                           onChange={(e) =>
-                            updateMed(
-                              i,
-                              "dose_per_day",
-                              parseFloat(e.target.value),
-                            )
+                            updateMed(i, "dosage_form", e.target.value)
                           }
-                          className={inputCls}
+                          style={inp()}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = COLORS.primary)
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = COLORS.border)
+                          }
                         >
-                          {[0.5, 1, 1.5, 2, 3, 4].map((v) => (
+                          {[
+                            ["tablet", "Tablet"],
+                            ["capsule", "Capsule"],
+                            ["syrup", "Syrup"],
+                            ["powder", "Powder/Sachet"],
+                            ["drops", "Drops"],
+                            ["injection", "Injection"],
+                            ["inhaler", "Inhaler"],
+                            ["cream", "Cream/Gel"],
+                            ["other", "Other"],
+                          ].map(([v, l]) => (
                             <option key={v} value={v}>
-                              {v}/day
+                              {l}
                             </option>
                           ))}
                         </select>
                       </div>
-                      <div>
-                        <label className={labelCls}>Start Date</label>
-                        <input
-                          type="date"
-                          value={m.start_date}
-                          onChange={(e) =>
-                            updateMed(i, "start_date", e.target.value)
-                          }
-                          className={inputCls}
-                        />
-                      </div>
                     </div>
-                    {m.qty > 0 && m.dose_per_day > 0 && (
-                      <div className="bg-[#e8f1fb] rounded-xl px-3 py-2 text-[11px] font-bold text-[#1a6fc4]">
-                        Supply: {m.qty} units / {m.dose_per_day}/day ={" "}
-                        {Math.ceil(m.qty / m.dose_per_day)} days
+
+                    <div
+                      style={{
+                        background: "#F8FAFC",
+                        borderRadius: 12,
+                        padding: 12,
+                        border: `1px solid ${COLORS.border}`,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: COLORS.primary,
+                          textTransform: "uppercase" as const,
+                          letterSpacing: 0.8,
+                          margin: "0 0 10px",
+                        }}
+                      >
+                        Dosage & Schedule
+                      </p>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gap: 10,
+                        }}
+                      >
+                        <div>
+                          <label style={lbl}>Quantity</label>
+                          <input
+                            type="number"
+                            value={m.qty}
+                            onChange={(e) =>
+                              updateMed(
+                                i,
+                                "qty",
+                                parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            style={inp()}
+                            onFocus={(e) =>
+                              (e.target.style.borderColor = COLORS.primary)
+                            }
+                            onBlur={(e) =>
+                              (e.target.style.borderColor = COLORS.border)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label style={lbl}>Dose/Day</label>
+                          <select
+                            value={m.dose_per_day}
+                            onChange={(e) =>
+                              updateMed(
+                                i,
+                                "dose_per_day",
+                                parseFloat(e.target.value),
+                              )
+                            }
+                            style={inp()}
+                            onFocus={(e) =>
+                              (e.target.style.borderColor = COLORS.primary)
+                            }
+                            onBlur={(e) =>
+                              (e.target.style.borderColor = COLORS.border)
+                            }
+                          >
+                            {[0.5, 1, 1.5, 2, 3, 4].map((v) => (
+                              <option key={v} value={v}>
+                                {v}/day
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={lbl}>Start Date</label>
+                          <input
+                            type="date"
+                            value={m.start_date}
+                            onChange={(e) =>
+                              updateMed(i, "start_date", e.target.value)
+                            }
+                            style={inp()}
+                            onFocus={(e) =>
+                              (e.target.style.borderColor = COLORS.primary)
+                            }
+                            onBlur={(e) =>
+                              (e.target.style.borderColor = COLORS.border)
+                            }
+                          />
+                        </div>
                       </div>
-                    )}
+
+                      {m.qty > 0 && m.dose_per_day > 0 && (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            padding: "8px 12px",
+                            background: COLORS.primaryLight,
+                            borderRadius: 10,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: COLORS.textSecondary,
+                              margin: 0,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Estimated Supply
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 800,
+                              color: COLORS.primary,
+                              margin: 0,
+                            }}
+                          >
+                            {Math.ceil(m.qty / m.dose_per_day)} days
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
+
               <button
                 onClick={addMed}
-                className="w-full py-3 border-2 border-dashed border-[#1a6fc4] rounded-2xl text-[#1a6fc4] text-[13px] font-bold bg-[#e8f1fb] hover:bg-[#d5e8f7] transition-colors"
+                style={{
+                  width: "100%",
+                  padding: "13px",
+                  borderRadius: 14,
+                  background: COLORS.primaryLight,
+                  color: COLORS.primary,
+                  border: `2px dashed ${COLORS.primary}`,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                }}
               >
                 + Add Another Medicine
               </button>
-            </div>
+            </>
           )}
 
-          {/* STEP 4 */}
+          {/* STEP 4 — Delivery */}
           {step === 3 && (
-            <div className="flex flex-col gap-4">
-              <div className="bg-white rounded-2xl border border-[#dce6f0] p-4 shadow-sm">
-                <div className="flex items-center justify-between">
+            <>
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Home Delivery")}>Home Delivery</p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 14px",
+                    background: "#F8FAFC",
+                    borderRadius: 12,
+                    border: `1px solid ${COLORS.border}`,
+                  }}
+                >
                   <div>
-                    <p className="text-[14px] font-bold text-gray-800">
-                      Home Delivery
+                    <p
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: COLORS.textPrimary,
+                        margin: "0 0 2px",
+                      }}
+                    >
+                      Enable Delivery
                     </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      Patient needs delivery service
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: COLORS.textMuted,
+                        margin: 0,
+                      }}
+                    >
+                      Patient needs home delivery
                     </p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label
+                    style={{
+                      position: "relative",
+                      display: "inline-block",
+                      width: 48,
+                      height: 26,
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
-                      className="sr-only peer"
                       checked={delivery}
                       onChange={(e) => setDelivery(e.target.checked)}
+                      style={{ opacity: 0, width: 0, height: 0 }}
                     />
-                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#1a6fc4] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: 13,
+                        background: delivery ? COLORS.primary : "#CBD5E1",
+                        transition: "background 0.2s",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 3,
+                          left: delivery ? 25 : 3,
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          background: "white",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                          transition: "left 0.2s",
+                        }}
+                      />
+                    </div>
                   </label>
                 </div>
+
                 {delivery && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
+                  <div
+                    style={{
+                      marginTop: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
                     <div>
-                      <label className={labelCls}>Delivery Status</label>
+                      <label style={lbl}>Delivery Status</label>
                       <select
                         value={deliveryStatus}
                         onChange={(e) => setDeliveryStatus(e.target.value)}
-                        className={inputCls}
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       >
                         <option value="">Not Set</option>
                         <option value="requested">Requested</option>
@@ -510,165 +999,361 @@ export default function AddPatientPage() {
                       </select>
                     </div>
                     <div>
-                      <label className={labelCls}>Delivery Boy</label>
+                      <label style={lbl}>Delivery Person</label>
                       <input
                         type="text"
                         value={deliveryBoy}
                         onChange={(e) => setDeliveryBoy(e.target.value)}
-                        placeholder="Delivery person name"
-                        className={inputCls}
+                        placeholder="Name of delivery person"
+                        style={inp()}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = COLORS.primary)
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = COLORS.border)
+                        }
                       />
                     </div>
                   </div>
                 )}
               </div>
-              <div className="bg-white rounded-2xl border border-[#dce6f0] p-4 shadow-sm">
-                <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wider mb-3">
-                  Additional Info
+
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Additional Details")}>
+                  Additional Details
                 </p>
-                <div className="flex flex-col gap-3">
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
                   <div>
-                    <label className={labelCls}>Monthly Expense (Rs)</label>
+                    <label style={lbl}>Monthly Medicine Expense (Rs)</label>
                     <input
                       type="number"
                       value={expense}
                       onChange={(e) => setExpense(e.target.value)}
                       placeholder="e.g. 850"
-                      className={inputCls}
+                      style={inp()}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Notes</label>
+                    <label style={lbl}>Notes</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Any additional notes..."
+                      placeholder="Any additional notes about this patient..."
                       rows={3}
-                      className="w-full px-3 py-2.5 border-[1.5px] border-[#dce6f0] rounded-xl text-[13px] outline-none focus:border-[#1a6fc4] resize-none bg-white"
+                      style={{
+                        ...inp(),
+                        resize: "none" as const,
+                        lineHeight: 1.5,
+                      }}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = COLORS.primary)
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor = COLORS.border)
+                      }
                     />
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
-          {/* STEP 5 */}
+          {/* STEP 5 — Review */}
           {step === 4 && (
-            <div className="flex flex-col gap-3">
-              <div className="bg-gradient-to-r from-[#1a6fc4] to-[#2980d9] rounded-2xl p-4 text-white">
-                <p className="text-[16px] font-extrabold">{name}</p>
-                <p className="text-white/75 text-[12px] mt-0.5">
-                  {age} yrs · {gender} · {area}
-                </p>
-                <div className="flex gap-1 flex-wrap mt-2">
-                  {diseases.map((d) => (
-                    <span
-                      key={d}
-                      className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+            <>
+              {/* Summary hero */}
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+                  borderRadius: 16,
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 16,
+                      background: "rgba(255,255,255,0.2)",
+                      border: "2px solid rgba(255,255,255,0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 22,
+                      fontWeight: 900,
+                      color: "white",
+                    }}
+                  >
+                    {name.charAt(0) || "P"}
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        color: "white",
+                        fontSize: 18,
+                        fontWeight: 900,
+                        margin: "0 0 3px",
+                      }}
                     >
-                      {d}
-                    </span>
-                  ))}
+                      {name || "—"}
+                    </p>
+                    <p
+                      style={{
+                        color: "rgba(255,255,255,0.7)",
+                        fontSize: 12,
+                        margin: 0,
+                      }}
+                    >
+                      {age} yrs &bull; {gender} &bull; {area || "—"}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {(diseases.length > 0 ? diseases : [primaryDisease])
+                    .filter(Boolean)
+                    .map((d) => (
+                      <span
+                        key={d}
+                        style={{
+                          background: "rgba(255,255,255,0.2)",
+                          color: "white",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "4px 10px",
+                          borderRadius: 8,
+                        }}
+                      >
+                        {d}
+                      </span>
+                    ))}
                 </div>
               </div>
-              {[
-                {
-                  title: "Contact",
-                  rows: [
-                    ["Mobile", mobile],
-                    ["Doctor", doctor],
-                    ["Address", address],
-                  ],
-                },
-                {
-                  title: "Disease",
-                  rows: [
-                    ["Primary", primaryDisease],
-                    ["Insurance", insurance],
-                  ],
-                },
-              ].map((sec) => (
-                <div
-                  key={sec.title}
-                  className="bg-white rounded-2xl border border-[#dce6f0] p-4 shadow-sm"
-                >
-                  <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wider mb-2">
-                    {sec.title}
-                  </p>
-                  {sec.rows.map(([l, v]) =>
-                    v ? (
-                      <div
-                        key={l}
-                        className="flex justify-between py-1.5 border-b border-gray-50 last:border-0 text-[13px]"
+
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Contact Details")}>Contact Details</p>
+                {[
+                  ["Mobile", mobile],
+                  ["Doctor", doctor],
+                  ["Address", address],
+                ].map(([l, v]) =>
+                  v ? (
+                    <div
+                      key={l}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "9px 0",
+                        borderBottom: "1px solid #F8FAFC",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: COLORS.textMuted,
+                          margin: 0,
+                          fontWeight: 600,
+                        }}
                       >
-                        <span className="text-gray-500 font-semibold">{l}</span>
-                        <span className="font-bold">{v}</span>
-                      </div>
-                    ) : null,
-                  )}
-                </div>
-              ))}
-              <div className="bg-white rounded-2xl border border-[#dce6f0] p-4 shadow-sm">
-                <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wider mb-2">
+                        {l}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: COLORS.textPrimary,
+                          margin: 0,
+                        }}
+                      >
+                        {v}
+                      </p>
+                    </div>
+                  ) : null,
+                )}
+              </div>
+
+              <div style={sectionStyle}>
+                <p style={sectionTitle("Medicines")}>
                   Medicines ({medicines.length})
                 </p>
                 {medicines.map((m, i) => (
                   <div
                     key={i}
-                    className="py-2 border-b border-gray-50 last:border-0"
+                    style={{
+                      padding: "10px 0",
+                      borderBottom:
+                        i < medicines.length - 1 ? "1px solid #F1F5F9" : "none",
+                    }}
                   >
-                    <p className="text-[13px] font-bold">
+                    <p
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: COLORS.textPrimary,
+                        margin: "0 0 3px",
+                      }}
+                    >
                       {m.brand || "Unnamed"}
                     </p>
-                    <p className="text-[11px] text-gray-400">
-                      {m.qty} units · {m.dose_per_day}/day ·{" "}
-                      {Math.ceil(m.qty / (m.dose_per_day || 1))} days
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: COLORS.textMuted,
+                        margin: 0,
+                      }}
+                    >
+                      {m.qty} units &bull; {m.dose_per_day}/day &bull;{" "}
+                      {Math.ceil(m.qty / (m.dose_per_day || 1))} days supply
                     </p>
                   </div>
                 ))}
               </div>
-            </div>
+
+              {/* Confirm box */}
+              <div
+                style={{
+                  background: "#E8F5E9",
+                  borderRadius: 14,
+                  padding: 14,
+                  border: "1.5px solid #A5D6A7",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                }}
+              >
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    background: "#2E7D32",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}
+                >
+                  <span
+                    style={{ color: "white", fontSize: 11, fontWeight: 900 }}
+                  >
+                    ✓
+                  </span>
+                </div>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: "#1B5E20",
+                    fontWeight: 600,
+                    margin: 0,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Please review all details before saving. Once saved, you can
+                  edit from the patient profile.
+                </p>
+              </div>
+            </>
           )}
         </div>
-        <div className="h-4" />
-      </div>
 
-      {/* Nav buttons */}
-      <div className="px-4 pb-5 pt-3 flex gap-3 border-t border-gray-100 bg-white flex-shrink-0">
-        {step > 0 && (
-          <button
-            onClick={() => setStep((s) => s - 1)}
-            className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-[14px] hover:bg-gray-200 transition-colors"
-          >
-            Back
-          </button>
-        )}
-        {step < STEPS.length - 1 ? (
-          <button
-            onClick={() => {
-              if (step === 0 && !name.trim()) {
-                showToast("Enter patient name first");
-                return;
-              }
-              setStep((s) => s + 1);
-            }}
-            className="flex-1 py-3.5 bg-[#1a6fc4] text-white rounded-2xl font-bold text-[14px] hover:bg-[#155a9e] transition-colors"
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            onClick={() => handleSubmit(false)}
-            disabled={saving}
-            className="flex-1 py-3.5 bg-green-500 text-white rounded-2xl font-bold text-[14px] disabled:opacity-60 hover:bg-green-600 transition-colors"
-          >
-            {saving ? "Saving..." : "Save Patient"}
-          </button>
-        )}
+        {/* Navigation buttons */}
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            background: "white",
+            padding: "12px 16px",
+            borderTop: `1px solid ${COLORS.border}`,
+            display: "flex",
+            gap: 10,
+            boxShadow: "0 -4px 16px rgba(0,0,0,0.08)",
+          }}
+        >
+          {step > 0 && (
+            <button
+              onClick={() => setStep((s) => s - 1)}
+              style={{
+                flex: 1,
+                padding: "14px",
+                borderRadius: 14,
+                background: "#F1F5F9",
+                color: COLORS.textSecondary,
+                fontSize: 14,
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              Back
+            </button>
+          )}
+          {step < STEPS.length - 1 ? (
+            <button
+              onClick={() => {
+                if (step === 0 && !name.trim()) {
+                  showToast("Please enter patient name");
+                  return;
+                }
+                setStep((s) => s + 1);
+              }}
+              style={{
+                flex: 2,
+                padding: "14px",
+                borderRadius: 14,
+                background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+                color: "white",
+                fontSize: 14,
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+                boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
+              }}
+            >
+              Continue
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSubmit(false)}
+              disabled={saving}
+              style={{
+                flex: 2,
+                padding: "14px",
+                borderRadius: 14,
+                background: saving
+                  ? "#90A4AE"
+                  : "linear-gradient(135deg, #1B5E20, #2E7D32)",
+                color: "white",
+                fontSize: 14,
+                fontWeight: 700,
+                border: "none",
+                cursor: saving ? "not-allowed" : "pointer",
+                fontFamily: "Inter, sans-serif",
+                boxShadow: saving ? "none" : "0 4px 12px rgba(46,125,50,0.3)",
+              }}
+            >
+              {saving ? "Saving..." : "Save Patient"}
+            </button>
+          )}
+        </div>
       </div>
-
-      <BottomNav />
-      <Toast />
-    </PhoneShell>
+    </AppShell>
   );
 }

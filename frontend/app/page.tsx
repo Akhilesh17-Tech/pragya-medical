@@ -4,17 +4,16 @@ import { useRouter } from "next/navigation";
 import { apiLogin } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import Toast, { showToast } from "@/components/ui/Toast";
+import { COLORS } from "@/lib/theme";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [show, setShow] = useState(false);
+  const [loading, setLoading]   = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (auth.isLoggedIn()) router.replace("/dashboard");
-    else setTimeout(() => setShow(true), 50);
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -27,125 +26,101 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err) {
       const e = err as any;
-      showToast(e.response?.data?.error || "Invalid email or password");
+      showToast(e.response?.data?.error || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
+  const inputStyle = {
+    width: "100%", padding: "14px 16px", borderRadius: 12,
+    border: `2px solid ${COLORS.border}`, fontSize: 14,
+    fontFamily: "Inter, sans-serif", outline: "none", background: "#FAFBFC",
+    transition: "border-color 0.2s", boxSizing: "border-box" as const,
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center items-start">
-      <div
-        className="w-full max-w-[430px] min-h-screen flex flex-col bg-white"
-        style={{ boxShadow: "0 0 40px rgba(0,0,0,0.12)" }}
-      >
-        {/* Top blue section */}
-        <div
-          className="flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-16"
-          style={{
-            background:
-              "linear-gradient(145deg, #0f4c8a 0%, #1a6fc4 50%, #2185d9 100%)",
-          }}
-        >
-          {/* Logo */}
-          <div
-            className={`transition-all duration-700 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-          >
-            <div
-              className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center mb-5 mx-auto border border-white/30"
-              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}
-            >
-              <svg viewBox="0 0 48 48" className="w-12 h-12" fill="none">
-                <rect
-                  x="4"
-                  y="4"
-                  width="40"
-                  height="40"
-                  rx="12"
-                  fill="white"
-                  fillOpacity="0.2"
-                />
-                <path
-                  d="M24 12v24M12 24h24"
-                  stroke="white"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-                <circle cx="24" cy="24" r="6" fill="white" fillOpacity="0.3" />
-              </svg>
-            </div>
-            <h1 className="text-white text-2xl font-black text-center tracking-tight mb-1">
-              Pragya Medical
-            </h1>
-            <p className="text-white/60 text-sm text-center font-medium">
-              Patient Reminder System
-            </p>
+    <div style={{
+      minHeight: "100vh", background: "linear-gradient(145deg, #0D47A1 0%, #1565C0 40%, #1976D2 70%, #0288D1 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+    }}>
+      <div style={{
+        width: "100%", maxWidth: 400, background: "white", borderRadius: 28,
+        overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.3)",
+      }}>
+        {/* Top brand section */}
+        <div style={{
+          background: "linear-gradient(145deg, #0D47A1, #1565C0, #1976D2)",
+          padding: "40px 32px 32px", textAlign: "center",
+        }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 20, background: "rgba(255,255,255,0.2)",
+            border: "2px solid rgba(255,255,255,0.35)", display: "flex",
+            alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+          }}>
+            <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
+              <rect x="8" y="8" width="32" height="32" rx="10" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
+              <path d="M24 14v20M14 24h20" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
+            </svg>
           </div>
-
-          {/* Card */}
-          <div
-            className={`w-full mt-10 transition-all duration-700 delay-150 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-          >
-            <div
-              className="bg-white rounded-3xl p-6"
-              style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
-            >
-              <h2 className="text-xl font-black text-gray-900 mb-1">
-                Welcome back
-              </h2>
-              <p className="text-sm text-gray-400 mb-6 font-medium">
-                Sign in to your account
-              </p>
-
-              <form onSubmit={handleLogin} className="flex flex-col gap-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@pragya.com"
-                    required
-                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-100 text-sm font-medium outline-none focus:border-[#1a6fc4] transition-all bg-gray-50 focus:bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    required
-                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-100 text-sm font-medium outline-none focus:border-[#1a6fc4] transition-all bg-gray-50 focus:bg-white"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-all mt-2 disabled:opacity-60 active:scale-[0.98]"
-                  style={{
-                    background: loading
-                      ? "#999"
-                      : "linear-gradient(135deg, #1a6fc4, #2185d9)",
-                    boxShadow: "0 4px 20px rgba(26,111,196,0.4)",
-                  }}
-                >
-                  {loading ? "Signing in..." : "Sign In"}
-                </button>
-              </form>
-            </div>
-          </div>
+          <h1 style={{ color: "white", fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.5 }}>Pragya Medical</h1>
+          <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, margin: "6px 0 0", fontWeight: 500 }}>Patient Reminder & Management System</p>
         </div>
 
-        <div className="bg-white px-6 py-4 text-center">
-          <p className="text-xs text-gray-400 font-medium">
-            Pragya Medical &copy; 2025. All rights reserved.
-          </p>
+        {/* Form section */}
+        <div style={{ padding: "32px" }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: COLORS.textPrimary, margin: "0 0 4px" }}>Sign in</h2>
+          <p style={{ fontSize: 13, color: COLORS.textMuted, margin: "0 0 24px" }}>Enter your credentials to continue</p>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+                Email Address
+              </label>
+              <input
+                type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="admin@pragya.com" required style={inputStyle}
+                onFocus={e => e.target.style.borderColor = COLORS.primary}
+                onBlur={e => e.target.style.borderColor = COLORS.border}
+              />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+                Password
+              </label>
+              <input
+                type="password" value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Enter your password" required style={inputStyle}
+                onFocus={e => e.target.style.borderColor = COLORS.primary}
+                onBlur={e => e.target.style.borderColor = COLORS.border}
+              />
+            </div>
+
+            <button
+              type="submit" disabled={loading}
+              style={{
+                width: "100%", padding: "15px", borderRadius: 14,
+                background: loading ? "#90A4AE" : `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+                color: "white", fontSize: 15, fontWeight: 700, border: "none",
+                cursor: loading ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif",
+                boxShadow: loading ? "none" : "0 4px 16px rgba(21,101,192,0.4)",
+                transition: "all 0.2s",
+              }}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          <div style={{
+            marginTop: 24, paddingTop: 16, borderTop: `1px solid ${COLORS.border}`,
+            textAlign: "center",
+          }}>
+            <p style={{ fontSize: 11, color: COLORS.textMuted, margin: 0 }}>
+              &copy; {new Date().getFullYear()} Pragya Medical. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
       <Toast />

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import {
   apiGetPatient,
@@ -9,13 +10,12 @@ import {
   apiDeletePatient,
   apiUpdateReminderStatus,
 } from "@/lib/api";
-import PhoneShell from "@/components/layout/PhoneShell";
-import TopBar from "@/components/layout/TopBar";
-import BottomNav from "@/components/layout/BottomNav";
-import Toast, { showToast } from "@/components/ui/Toast";
-import Spinner from "@/components/ui/Spinner";
+import AppShell from "@/components/layout/AppShell";
 import Tag from "@/components/ui/Tag";
+import Spinner from "@/components/ui/Spinner";
+import Toast, { showToast } from "@/components/ui/Toast";
 import { formatDate, getWALink, DELIVERY_LABELS } from "@/lib/utils";
+import { COLORS } from "@/lib/theme";
 import type { Patient } from "@/types";
 
 export default function PatientProfilePage() {
@@ -38,7 +38,7 @@ export default function PatientProfilePage() {
     try {
       const res = await apiGetPatient(id);
       setPatient(res.data.data);
-    } catch (err) {
+    } catch {
       showToast("Patient not found");
       router.replace("/patients");
     } finally {
@@ -52,19 +52,19 @@ export default function PatientProfilePage() {
       await apiRefillMedicine(medId);
       showToast(brand + " refilled successfully");
       loadPatient();
-    } catch (err) {
+    } catch {
       showToast("Failed to refill");
     } finally {
       setRefilling(null);
     }
   };
 
-  const handleMarkStatus = async (status: string) => {
+  const handleMark = async (status: string, label: string) => {
     try {
       await apiUpdateReminderStatus(id, status);
-      showToast("Marked as " + status);
+      showToast("Marked as " + label);
       loadPatient();
-    } catch (err) {
+    } catch {
       showToast("Failed to update");
     }
   };
@@ -75,30 +75,40 @@ export default function PatientProfilePage() {
       await apiDeletePatient(id);
       showToast("Patient deleted");
       router.replace("/patients");
-    } catch (err) {
+    } catch {
       showToast("Failed to delete");
     }
   };
 
   if (loading)
     return (
-      <PhoneShell>
-        <TopBar title="Patient Profile" />
+      <AppShell title="Patient Profile">
         <Spinner />
-      </PhoneShell>
+      </AppShell>
     );
   if (!patient) return null;
 
   const tagColor =
     patient.tag === "urgent"
-      ? "#e74c3c"
+      ? "#C62828"
       : patient.tag === "today"
-        ? "#e67e22"
+        ? "#E65100"
         : patient.tag === "upcoming"
-          ? "#f39c12"
+          ? "#F57F17"
           : patient.tag === "missed"
-            ? "#95a5a6"
-            : "#27ae60";
+            ? "#546E7A"
+            : "#2E7D32";
+
+  const tagBg =
+    patient.tag === "urgent"
+      ? "#FFEBEE"
+      : patient.tag === "today"
+        ? "#FFF3E0"
+        : patient.tag === "upcoming"
+          ? "#FFFDE7"
+          : patient.tag === "missed"
+            ? "#ECEFF1"
+            : "#E8F5E9";
 
   const daysStr =
     patient.days_left <= 0
@@ -106,39 +116,149 @@ export default function PatientProfilePage() {
       : `${patient.days_left} Days Left`;
 
   return (
-    <PhoneShell>
-      <TopBar title="Patient Profile" backHref="/patients" />
-
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {/* Hero */}
-        <div className="bg-[#1a6fc4] px-4 py-4 text-white">
-          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl mb-3">
-            {patient.gender === "Female" ? "F" : "M"}
-          </div>
-          <p className="text-[18px] font-extrabold">{patient.name}</p>
-          <p className="text-white/75 text-[12px] mt-0.5">
-            {patient.age} yrs · {patient.primary_disease} · {patient.area}
-          </p>
-
-          <div className="flex gap-2 flex-wrap mt-2">
-            <span
-              className="text-white text-[10px] font-bold px-2.5 py-1 rounded-full"
-              style={{ background: tagColor }}
+    <AppShell title={patient.name}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+        {/* Hero card */}
+        <div
+          style={{
+            background: `linear-gradient(145deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+            padding: "20px 20px 24px",
+            position: "relative",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            {/* Avatar */}
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                flexShrink: 0,
+                background:
+                  patient.gender === "Female"
+                    ? "rgba(236,64,122,0.3)"
+                    : "rgba(255,255,255,0.2)",
+                border: "2px solid rgba(255,255,255,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 26,
+                fontWeight: 900,
+                color: "white",
+              }}
             >
-              {patient.tag.toUpperCase()}
-            </span>
-            <span className="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-              {patient.reminder_status?.toUpperCase()}
-            </span>
-            {patient.delivery && (
-              <span className="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                DELIVERY
-              </span>
-            )}
+              {patient.name.charAt(0)}
+            </div>
+            <div style={{ flex: 1 }}>
+              <h1
+                style={{
+                  color: "white",
+                  fontSize: 20,
+                  fontWeight: 900,
+                  margin: "0 0 4px",
+                  letterSpacing: -0.3,
+                }}
+              >
+                {patient.name}
+              </h1>
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: 12,
+                  margin: "0 0 10px",
+                  fontWeight: 500,
+                }}
+              >
+                {patient.age} yrs &bull; {patient.gender} &bull; {patient.area}
+              </p>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <span
+                  style={{
+                    background: tagBg,
+                    color: tagColor,
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: "3px 10px",
+                    borderRadius: 8,
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {patient.tag.toUpperCase()}
+                </span>
+                <span
+                  style={{
+                    background: "rgba(255,255,255,0.15)",
+                    color: "white",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: "3px 10px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.2)",
+                  }}
+                >
+                  {patient.reminder_status?.toUpperCase()}
+                </span>
+                {patient.delivery && (
+                  <span
+                    style={{
+                      background: "rgba(255,255,255,0.15)",
+                      color: "white",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "3px 10px",
+                      borderRadius: 8,
+                      border: "1px solid rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    DELIVERY
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Days left pill */}
+          <div
+            style={{
+              marginTop: 16,
+              padding: "10px 16px",
+              borderRadius: 14,
+              background:
+                patient.days_left <= 0
+                  ? "rgba(198,40,40,0.3)"
+                  : patient.days_left <= 3
+                    ? "rgba(230,81,0,0.3)"
+                    : "rgba(46,125,50,0.3)",
+              border: `1px solid ${patient.days_left <= 0 ? "rgba(198,40,40,0.5)" : "rgba(255,255,255,0.2)"}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <p
+              style={{
+                color: "rgba(255,255,255,0.8)",
+                fontSize: 11,
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
+              Medicine Status
+            </p>
+            <p
+              style={{
+                color: "white",
+                fontSize: 14,
+                fontWeight: 800,
+                margin: 0,
+              }}
+            >
+              {daysStr}
+            </p>
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 mt-3">
+          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <a
               href={getWALink(
                 patient.whatsapp || patient.mobile,
@@ -148,175 +268,439 @@ export default function PatientProfilePage() {
               )}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => handleMarkStatus("sent")}
-              className="flex-1 py-2 bg-green-500 text-white text-center rounded-lg text-[12px] font-bold"
+              onClick={() => handleMark("sent", "sent")}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: 12,
+                background: "#25D366",
+                color: "white",
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: "center",
+                textDecoration: "none",
+                display: "block",
+              }}
             >
               WhatsApp
             </a>
             <a
               href={"tel:" + patient.mobile}
-              className="flex-1 py-2 bg-white text-[#1a6fc4] text-center rounded-lg text-[12px] font-bold"
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.2)",
+                color: "white",
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: "center",
+                border: "1.5px solid rgba(255,255,255,0.3)",
+                textDecoration: "none",
+                display: "block",
+              }}
             >
               Call
             </a>
+            <Link
+              href={`/patients/${id}/edit`}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.15)",
+                color: "white",
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: "center",
+                border: "1.5px solid rgba(255,255,255,0.2)",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              Edit
+            </Link>
           </div>
         </div>
 
-        {/* Basic details */}
-        <InfoSection title="Basic Details">
-          {[
-            ["Mobile", patient.mobile],
-            ["WhatsApp", patient.whatsapp || patient.mobile],
-            ["Gender", patient.gender],
-            ["Area", patient.area],
-            ["Address", patient.address],
-            ["Doctor", patient.doctor],
-          ].map(([l, v]) => (
-            <InfoRow key={l} label={l} value={v} />
-          ))}
-        </InfoSection>
-
-        {/* Diseases */}
-        <InfoSection title="Disease / Condition">
-          <InfoRow label="Primary" value={patient.primary_disease} />
-          {patient.diseases?.length > 1 && (
-            <div className="flex gap-1 flex-wrap pt-1">
-              {patient.diseases.map((d) => (
-                <span
-                  key={d}
-                  className="bg-[#e8f1fb] text-[#1a6fc4] text-[10px] font-bold px-2 py-0.5 rounded"
-                >
-                  {d}
-                </span>
-              ))}
-            </div>
-          )}
-        </InfoSection>
-
-        {/* Medicines */}
-        <InfoSection title={`Medicines — ${daysStr}`}>
-          {patient.medicines?.map((m) => {
-            const dl = m.days_left ?? 0;
-            const dlColor =
-              dl <= 0 ? "#e74c3c" : dl <= 3 ? "#e67e22" : "#27ae60";
-            const supply =
-              m.qty && m.dose_per_day ? Math.ceil(m.qty / m.dose_per_day) : 0;
-            return (
-              <div
-                key={m.id}
-                className="bg-[#f7fbff] rounded-xl p-3 mb-2 border border-[#dce6f0]"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-[13px] font-extrabold">{m.brand}</p>
-                    <p className="text-[11px] text-gray-500">
-                      {m.composition} · {m.company} · {m.strength}
-                    </p>
-                  </div>
-                  <span
-                    className="text-[12px] font-bold"
-                    style={{ color: dlColor }}
-                  >
-                    {dl <= 0 ? "FINISHED" : `${dl}d left`}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  {[
-                    ["QTY", `${m.qty} units`],
-                    ["DOSE", `${m.dose_per_day}/day`],
-                    ["SUPPLY", `${supply}d`],
-                  ].map(([l, v]) => (
-                    <div
-                      key={l}
-                      className="bg-white rounded-lg p-1.5 text-center border border-[#dce6f0]"
-                    >
-                      <p className="text-[9px] text-gray-500 font-bold">{l}</p>
-                      <p className="text-[11px] font-extrabold">{v}</p>
-                    </div>
-                  ))}
-                </div>
-                {m.end_date && (
-                  <p className="text-[11px] text-gray-400 text-center mb-2">
-                    Ends: {formatDate(m.end_date)}
-                  </p>
-                )}
-                <button
-                  onClick={() => m.id && handleRefill(m.id, m.brand)}
-                  disabled={refilling === m.id}
-                  className="w-full py-2 bg-green-500 text-white rounded-lg text-[12px] font-bold disabled:opacity-60"
-                >
-                  {refilling === m.id ? "Refilling..." : "Refilled Today"}
-                </button>
-              </div>
-            );
-          })}
-          <p className="text-[12px] text-gray-500 text-right font-semibold">
-            Monthly Expense: Rs{" "}
-            {patient.monthly_expense?.toLocaleString("en-IN")}
-          </p>
-        </InfoSection>
-
-        {/* Insurance */}
-        {patient.insurance && (
-          <InfoSection title="Insurance">
-            <InfoRow label="Company" value={patient.insurance} />
-            {patient.insurance_date && (
-              <InfoRow
-                label="Expiry"
-                value={formatDate(patient.insurance_date)}
-              />
+        {/* Content */}
+        <div
+          style={{
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          {/* Basic details card */}
+          <InfoCard title="Basic Details">
+            {[
+              ["Mobile", patient.mobile],
+              ["WhatsApp", patient.whatsapp || patient.mobile],
+              ["Gender", patient.gender],
+              ["Area", patient.area],
+              ["Address", patient.address],
+              ["Doctor", patient.doctor],
+            ].map(([l, v]) =>
+              v ? <InfoRow key={l} label={l} value={v} /> : null,
             )}
-          </InfoSection>
-        )}
+          </InfoCard>
 
-        {/* Delivery */}
-        {patient.delivery && (
-          <InfoSection title="Delivery Tracking">
+          {/* Disease card */}
+          <InfoCard title="Disease / Condition">
             <InfoRow
-              label="Status"
-              value={DELIVERY_LABELS[patient.delivery_status] || "—"}
+              label="Primary Disease"
+              value={patient.primary_disease || "—"}
             />
-            {patient.delivery_boy && (
-              <InfoRow label="Delivery Boy" value={patient.delivery_boy} />
+            {patient.diseases?.length > 1 && (
+              <div
+                style={{
+                  paddingTop: 8,
+                  display: "flex",
+                  gap: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                {patient.diseases.map((d) => (
+                  <span
+                    key={d}
+                    style={{
+                      background: COLORS.primaryLight,
+                      color: COLORS.primary,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: "4px 10px",
+                      borderRadius: 8,
+                    }}
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
             )}
-          </InfoSection>
-        )}
+          </InfoCard>
 
-        {/* Action buttons */}
-        <div className="px-4 py-3 flex gap-2">
-          <button
-            onClick={() => handleMarkStatus("sent")}
-            className="flex-[2] py-3 bg-[#1a6fc4] text-white rounded-xl font-bold text-[13px]"
-          >
-            Send Reminder
-          </button>
-          <button
-            onClick={() => handleMarkStatus("purchased")}
-            className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-[13px]"
-          >
-            Purchased
-          </button>
-        </div>
+          {/* Medicines card */}
+          <InfoCard title="Medicines">
+            {patient.medicines?.map((m, idx) => {
+              const dl = m.days_left ?? 0;
+              const supply =
+                m.qty && m.dose_per_day ? Math.ceil(m.qty / m.dose_per_day) : 0;
+              const dlColor =
+                dl <= 0 ? "#C62828" : dl <= 3 ? "#E65100" : "#2E7D32";
+              return (
+                <div
+                  key={m.id || idx}
+                  style={{
+                    background: "#F8FAFC",
+                    borderRadius: 14,
+                    padding: 14,
+                    marginBottom: idx < patient.medicines.length - 1 ? 10 : 0,
+                    border: "1px solid #E0E7EF",
+                  }}
+                >
+                  {/* Medicine header */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: COLORS.textPrimary,
+                          margin: "0 0 3px",
+                        }}
+                      >
+                        {m.brand}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: COLORS.textMuted,
+                          margin: 0,
+                        }}
+                      >
+                        {[m.composition, m.company, m.strength]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: dlColor,
+                        background:
+                          dl <= 0 ? "#FFEBEE" : dl <= 3 ? "#FFF3E0" : "#E8F5E9",
+                        padding: "4px 10px",
+                        borderRadius: 8,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {dl <= 0 ? "FINISHED" : `${dl}d left`}
+                    </span>
+                  </div>
 
-        <div className="px-4 pb-4">
+                  {/* Stats row */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {[
+                      ["QTY", `${m.qty} units`],
+                      ["DOSE", `${m.dose_per_day}/day`],
+                      ["SUPPLY", `${supply} days`],
+                    ].map(([label, val]) => (
+                      <div
+                        key={label}
+                        style={{
+                          background: "white",
+                          borderRadius: 10,
+                          padding: "8px 6px",
+                          textAlign: "center",
+                          border: "1px solid #E0E7EF",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 9,
+                            color: COLORS.textMuted,
+                            fontWeight: 700,
+                            margin: "0 0 3px",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          {label}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 800,
+                            color: COLORS.textPrimary,
+                            margin: 0,
+                          }}
+                        >
+                          {val}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {m.end_date && (
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: COLORS.textMuted,
+                        textAlign: "center",
+                        margin: "0 0 10px",
+                      }}
+                    >
+                      Ends: {formatDate(m.end_date)}
+                    </p>
+                  )}
+
+                  <button
+                    onClick={() => m.id && handleRefill(m.id, m.brand)}
+                    disabled={refilling === m.id}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: 10,
+                      background: refilling === m.id ? "#E0E7EF" : "#E8F5E9",
+                      color: refilling === m.id ? COLORS.textMuted : "#2E7D32",
+                      border: `1.5px solid ${refilling === m.id ? "#E0E7EF" : "#A5D6A7"}`,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: refilling === m.id ? "not-allowed" : "pointer",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                  >
+                    {refilling === m.id
+                      ? "Refilling..."
+                      : "Mark as Refilled Today"}
+                  </button>
+                </div>
+              );
+            })}
+            <div
+              style={{
+                marginTop: 10,
+                padding: "10px 14px",
+                background: COLORS.primaryLight,
+                borderRadius: 10,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 12,
+                  color: COLORS.textSecondary,
+                  margin: 0,
+                  fontWeight: 600,
+                }}
+              >
+                Monthly Expense
+              </p>
+              <p
+                style={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: COLORS.primary,
+                  margin: 0,
+                }}
+              >
+                Rs {patient.monthly_expense?.toLocaleString("en-IN") || "0"}
+              </p>
+            </div>
+          </InfoCard>
+
+          {/* Insurance */}
+          {patient.insurance && (
+            <InfoCard title="Insurance">
+              <InfoRow label="Company" value={patient.insurance} />
+              {patient.insurance_date && (
+                <InfoRow
+                  label="Expiry"
+                  value={formatDate(patient.insurance_date)}
+                />
+              )}
+            </InfoCard>
+          )}
+
+          {/* Delivery */}
+          {patient.delivery && (
+            <InfoCard title="Delivery Tracking">
+              <InfoRow
+                label="Status"
+                value={DELIVERY_LABELS[patient.delivery_status] || "—"}
+              />
+              {patient.delivery_boy && (
+                <InfoRow label="Delivery By" value={patient.delivery_boy} />
+              )}
+            </InfoCard>
+          )}
+
+          {/* Action buttons */}
+          <div
+            style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}
+          >
+            <button
+              onClick={() => handleMark("sent", "Reminder Sent")}
+              style={{
+                padding: "14px",
+                borderRadius: 14,
+                background: COLORS.primary,
+                color: "white",
+                fontSize: 13,
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+                boxShadow: "0 4px 12px rgba(21,101,192,0.3)",
+              }}
+            >
+              Send Reminder
+            </button>
+            <button
+              onClick={() => handleMark("purchased", "Purchased")}
+              style={{
+                padding: "14px",
+                borderRadius: 14,
+                background: "#E8F5E9",
+                color: "#2E7D32",
+                fontSize: 13,
+                fontWeight: 700,
+                border: "1.5px solid #A5D6A7",
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              Purchased
+            </button>
+          </div>
+
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
+          >
+            <button
+              onClick={() => handleMark("ignored", "Ignored")}
+              style={{
+                padding: "12px",
+                borderRadius: 14,
+                background: "#F8FAFC",
+                color: COLORS.textSecondary,
+                fontSize: 13,
+                fontWeight: 600,
+                border: `1.5px solid ${COLORS.border}`,
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              Mark Ignored
+            </button>
+            <Link
+              href={`/invoices/create?patient_id=${patient.id}`}
+              style={{ textDecoration: "none" }}
+            >
+              <button
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  borderRadius: 14,
+                  background: "#FFF3E0",
+                  color: "#E65100",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  border: "1.5px solid #FFCC80",
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
+                Create Invoice
+              </button>
+            </Link>
+          </div>
+
+          {/* Delete */}
           <button
             onClick={handleDelete}
-            className="w-full py-3 bg-red-50 text-red-500 border-[1.5px] border-red-200 rounded-xl font-bold text-[13px]"
+            style={{
+              width: "100%",
+              padding: "13px",
+              borderRadius: 14,
+              background: "#FFF5F5",
+              color: "#C62828",
+              fontSize: 13,
+              fontWeight: 700,
+              border: "1.5px solid #FFCDD2",
+              cursor: "pointer",
+              fontFamily: "Inter, sans-serif",
+            }}
           >
             Delete Patient
           </button>
+
+          <div style={{ height: 8 }} />
         </div>
-
-        <div className="h-4" />
       </div>
-
-      <BottomNav />
-      <Toast />
-    </PhoneShell>
+    </AppShell>
   );
 }
 
-function InfoSection({
+function InfoCard({
   title,
   children,
 }: {
@@ -324,20 +708,73 @@ function InfoSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-4 py-3 border-b border-[#dce6f0]">
-      <p className="text-[11px] font-extrabold text-[#1a6fc4] uppercase tracking-wide mb-2">
-        {title}
-      </p>
-      {children}
+    <div
+      style={{
+        background: "white",
+        borderRadius: 16,
+        overflow: "hidden",
+        border: "1px solid #E0E7EF",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+      }}
+    >
+      <div
+        style={{
+          padding: "12px 16px",
+          borderBottom: "1px solid #F1F5F9",
+          background: "#FAFBFC",
+        }}
+      >
+        <p
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: COLORS.primary,
+            margin: 0,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          {title}
+        </p>
+      </div>
+      <div style={{ padding: "4px 16px 12px" }}>{children}</div>
     </div>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex justify-between py-1.5 border-b border-gray-50 last:border-0 text-[13px]">
-      <span className="text-gray-500 font-semibold">{label}</span>
-      <span className="font-bold text-right">{value || "—"}</span>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "9px 0",
+        borderBottom: "1px solid #F8FAFC",
+      }}
+    >
+      <p
+        style={{
+          fontSize: 12,
+          color: COLORS.textMuted,
+          fontWeight: 600,
+          margin: 0,
+        }}
+      >
+        {label}
+      </p>
+      <p
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: COLORS.textPrimary,
+          margin: 0,
+          maxWidth: "60%",
+          textAlign: "right",
+        }}
+      >
+        {value || "—"}
+      </p>
     </div>
   );
 }

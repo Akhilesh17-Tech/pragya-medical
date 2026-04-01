@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { apiGetPatients } from "@/lib/api";
-import PhoneShell from "@/components/layout/PhoneShell";
-import BottomNav from "@/components/layout/BottomNav";
-import Toast, { showToast } from "@/components/ui/Toast";
-import Spinner from "@/components/ui/Spinner";
+import AppShell from "@/components/layout/AppShell";
 import Tag from "@/components/ui/Tag";
+import Spinner from "@/components/ui/Spinner";
+import Toast, { showToast } from "@/components/ui/Toast";
+import { COLORS } from "@/lib/theme";
 import type { Patient } from "@/types";
 
 const FILTERS = [
@@ -72,154 +72,314 @@ export default function PatientsPage() {
   }, [search, activeFilter, patients]);
 
   return (
-    <PhoneShell>
-      {/* Top bar */}
-      <div className="bg-[#1a6fc4] px-4 pt-4 pb-0">
-        <div className="flex items-center justify-between mb-3">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold"
+    <AppShell title="All Patients">
+      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+        {/* Search + filter section */}
+        <div
+          style={{
+            background: "white",
+            padding: "12px 16px 0",
+            borderBottom: `1px solid ${COLORS.border}`,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+          }}
+        >
+          {/* Search box */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: "#F1F5F9",
+              borderRadius: 12,
+              padding: "10px 14px",
+              marginBottom: 12,
+            }}
           >
-            &larr;
-          </button>
-          <h1 className="text-white font-extrabold text-[16px]">
-            All Patients
-          </h1>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#94A3B8"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name, mobile, medicine, area..."
+              style={{
+                flex: 1,
+                border: "none",
+                background: "transparent",
+                fontSize: 13,
+                fontFamily: "Inter, sans-serif",
+                outline: "none",
+                color: COLORS.textPrimary,
+              }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: COLORS.textMuted,
+                  padding: 0,
+                  fontSize: 16,
+                }}
+              >
+                &times;
+              </button>
+            )}
+          </div>
+
+          {/* Filter chips */}
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              paddingBottom: 12,
+            }}
+            className="scrollbar-hide"
+          >
+            {FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                  transition: "all 0.15s",
+                  background: activeFilter === f ? COLORS.primary : "#F1F5F9",
+                  color: activeFilter === f ? "white" : COLORS.textSecondary,
+                  border: `1.5px solid ${activeFilter === f ? COLORS.primary : "transparent"}`,
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Count bar */}
+        <div
+          style={{
+            padding: "10px 16px",
+            background: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: `1px solid ${COLORS.border}`,
+          }}
+        >
+          <p
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: COLORS.textMuted,
+              margin: 0,
+            }}
+          >
+            {filtered.length} patient{filtered.length !== 1 ? "s" : ""} found
+          </p>
           <Link href="/patients/add">
-            <button className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-              +
+            <button
+              style={{
+                padding: "7px 14px",
+                borderRadius: 10,
+                background: COLORS.primary,
+                color: "white",
+                fontSize: 12,
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              + Add New
             </button>
           </Link>
         </div>
-        {/* Search inside blue header */}
-        <div className="bg-white/15 rounded-2xl flex items-center px-3 py-2.5 gap-2 mb-3">
-          <svg
-            className="w-4 h-4 text-white/60 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            className="flex-1 bg-transparent text-white placeholder-white/60 text-[13px] outline-none"
-            placeholder="Search name, mobile, medicine, area..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="text-white/60 font-bold text-sm"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-        {/* Filter chips */}
-        <div className="flex gap-1.5 pb-3 overflow-x-auto scrollbar-hide">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all ${
-                activeFilter === f
-                  ? "bg-white text-[#1a6fc4]"
-                  : "bg-white/20 text-white"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Count */}
-      <div className="px-4 py-2.5 bg-white border-b border-gray-100 flex items-center justify-between">
-        <span className="text-[12px] font-bold text-gray-500">
-          {filtered.length} patients
-        </span>
-        <Link href="/patients/add">
-          <button className="text-[12px] font-bold text-[#1a6fc4] bg-[#e8f1fb] px-3 py-1.5 rounded-xl">
-            + Add New
-          </button>
-        </Link>
-      </div>
-
-      <div className="flex-1 overflow-y-auto scrollbar-hide bg-[#f5f8fc]">
+        {/* Patient list */}
         {loading ? (
           <Spinner />
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 bg-[#e8f1fb] rounded-full flex items-center justify-center text-3xl mb-3">
-              👥
-            </div>
-            <p className="text-[14px] font-bold text-gray-500 mb-1">
+          <div style={{ textAlign: "center", padding: "64px 24px" }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>👥</div>
+            <p
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                color: COLORS.textSecondary,
+                margin: "0 0 6px",
+              }}
+            >
               No patients found
             </p>
-            <p className="text-[12px] text-gray-400 mb-4">
-              Try a different search or filter
+            <p
+              style={{
+                fontSize: 13,
+                color: COLORS.textMuted,
+                margin: "0 0 20px",
+              }}
+            >
+              Try a different search or add a new patient
             </p>
             <Link href="/patients/add">
-              <button className="px-5 py-2.5 bg-[#1a6fc4] text-white rounded-xl text-[13px] font-bold">
-                Add Patient
+              <button
+                style={{
+                  padding: "12px 24px",
+                  borderRadius: 12,
+                  background: COLORS.primary,
+                  color: "white",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Add First Patient
               </button>
             </Link>
           </div>
         ) : (
-          <div className="p-3 flex flex-col gap-2">
+          <div
+            style={{
+              padding: "12px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
             {filtered.map((p) => (
-              <Link href={`/patients/${p.id}`} key={p.id}>
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 active:scale-[0.99] transition-transform">
+              <Link
+                href={`/patients/${p.id}`}
+                key={p.id}
+                style={{ textDecoration: "none" }}
+              >
+                <div
+                  style={{
+                    background: "white",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    border: `1px solid ${COLORS.border}`,
+                    cursor: "pointer",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                    transition: "box-shadow 0.15s, transform 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 16px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 1px 4px rgba(0,0,0,0.05)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  {/* Color bar */}
                   <div
-                    className={`h-1 w-full ${
-                      p.tag === "urgent"
-                        ? "bg-red-500"
-                        : p.tag === "today"
-                          ? "bg-orange-500"
-                          : p.tag === "upcoming"
-                            ? "bg-yellow-400"
-                            : p.tag === "missed"
-                              ? "bg-gray-400"
-                              : "bg-green-400"
-                    }`}
+                    style={{
+                      height: 3,
+                      background:
+                        p.tag === "urgent"
+                          ? "#C62828"
+                          : p.tag === "today"
+                            ? "#E65100"
+                            : p.tag === "upcoming"
+                              ? "#F9A825"
+                              : p.tag === "missed"
+                                ? "#90A4AE"
+                                : "#43A047",
+                    }}
                   />
-                  <div className="p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2.5">
+                  <div style={{ padding: "12px 14px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
                         <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-extrabold text-[14px] flex-shrink-0 ${
-                            p.gender === "Female"
-                              ? "bg-pink-400"
-                              : "bg-[#1a6fc4]"
-                          }`}
+                          style={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 13,
+                            flexShrink: 0,
+                            background:
+                              p.gender === "Female" ? "#FCE4EC" : "#E3F2FD",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 17,
+                            fontWeight: 900,
+                            color:
+                              p.gender === "Female"
+                                ? "#C2185B"
+                                : COLORS.primary,
+                          }}
                         >
                           {p.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-[14px] font-extrabold text-gray-800">
+                          <p
+                            style={{
+                              fontSize: 15,
+                              fontWeight: 800,
+                              color: COLORS.textPrimary,
+                              margin: "0 0 2px",
+                            }}
+                          >
                             {p.name}
                           </p>
-                          <p className="text-[11px] text-gray-400">
-                            {p.age} yrs · {p.area}
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: COLORS.textMuted,
+                              margin: 0,
+                            }}
+                          >
+                            {p.age} yrs &bull; {p.area}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div style={{ textAlign: "right" }}>
                         <Tag tag={p.tag} />
                         <p
-                          className={`text-[11px] font-bold mt-1 ${
-                            p.days_left <= 0
-                              ? "text-red-500"
-                              : p.days_left <= 3
-                                ? "text-orange-500"
-                                : "text-green-600"
-                          }`}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            margin: "4px 0 0",
+                            color:
+                              p.days_left <= 0
+                                ? "#C62828"
+                                : p.days_left <= 3
+                                  ? "#E65100"
+                                  : "#2E7D32",
+                          }}
                         >
                           {p.days_left <= 0
                             ? "Finished"
@@ -227,48 +387,99 @@ export default function PatientsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
+
+                    {/* Diseases */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 6,
+                        flexWrap: "wrap",
+                        marginBottom: 8,
+                      }}
+                    >
                       {p.diseases?.slice(0, 3).map((d) => (
                         <span
                           key={d}
-                          className="bg-[#e8f1fb] text-[#1a6fc4] text-[10px] font-bold px-2 py-0.5 rounded-lg"
+                          style={{
+                            background: COLORS.primaryLight,
+                            color: COLORS.primary,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "3px 8px",
+                            borderRadius: 6,
+                          }}
                         >
                           {d}
                         </span>
                       ))}
                       {p.delivery && (
-                        <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                        <span
+                          style={{
+                            background: "#E8F5E9",
+                            color: "#2E7D32",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "3px 8px",
+                            borderRadius: 6,
+                          }}
+                        >
                           Delivery
                         </span>
                       )}
-                      <span
-                        className={`ml-auto text-[10px] font-bold capitalize ${
-                          p.reminder_status === "sent"
-                            ? "text-blue-500"
-                            : p.reminder_status === "purchased"
-                              ? "text-green-500"
-                              : p.reminder_status === "ignored"
-                                ? "text-orange-500"
-                                : "text-gray-300"
-                        }`}
+                    </div>
+
+                    {/* Bottom row */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: COLORS.textMuted,
+                          margin: 0,
+                        }}
                       >
-                        {p.reminder_status}
+                        {p.mobile} &bull; Dr. {p.doctor || "—"}
+                      </p>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          background:
+                            p.reminder_status === "sent"
+                              ? "#E3F2FD"
+                              : p.reminder_status === "purchased"
+                                ? "#E8F5E9"
+                                : p.reminder_status === "ignored"
+                                  ? "#FFF3E0"
+                                  : "#F1F5F9",
+                          color:
+                            p.reminder_status === "sent"
+                              ? COLORS.primary
+                              : p.reminder_status === "purchased"
+                                ? "#2E7D32"
+                                : p.reminder_status === "ignored"
+                                  ? "#E65100"
+                                  : COLORS.textMuted,
+                        }}
+                      >
+                        {p.reminder_status?.toUpperCase()}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1.5">
-                      {p.mobile} · Dr. {p.doctor}
-                    </p>
                   </div>
                 </div>
               </Link>
             ))}
+            <div style={{ height: 8 }} />
           </div>
         )}
-        <div className="h-4" />
       </div>
-
-      <BottomNav />
-      <Toast />
-    </PhoneShell>
+    </AppShell>
   );
 }

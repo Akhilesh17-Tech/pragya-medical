@@ -4,37 +4,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { apiGetReminders, apiUpdateReminderStatus } from "@/lib/api";
-import PhoneShell from "@/components/layout/PhoneShell";
-import TopBar from "@/components/layout/TopBar";
-import BottomNav from "@/components/layout/BottomNav";
-import Toast, { showToast } from "@/components/ui/Toast";
-import Spinner from "@/components/ui/Spinner";
+import AppShell from "@/components/layout/AppShell";
 import Tag from "@/components/ui/Tag";
+import Spinner from "@/components/ui/Spinner";
+import Toast, { showToast } from "@/components/ui/Toast";
 import { getWALink } from "@/lib/utils";
+import { COLORS } from "@/lib/theme";
 import type { Patient } from "@/types";
 
-type Tab  = "urgent" | "today" | "upcoming" | "missed" | "all";
+type Tab = "urgent" | "today" | "upcoming" | "missed" | "all";
 type Sort = "days_left" | "area" | "medicine";
 
-const TABS: { key: Tab; label: string; activeClass: string }[] = [
-  { key: "urgent",   label: "URGENT",   activeClass: "bg-red-500 text-white border-red-500"       },
-  { key: "today",    label: "TODAY",    activeClass: "bg-orange-500 text-white border-orange-500"  },
-  { key: "upcoming", label: "UPCOMING", activeClass: "bg-yellow-400 text-white border-yellow-400"  },
-  { key: "missed",   label: "MISSED",   activeClass: "bg-gray-500 text-white border-gray-500"      },
-  { key: "all",      label: "ALL",      activeClass: "bg-[#1a6fc4] text-white border-[#1a6fc4]"    },
+const TABS: { key: Tab; label: string; color: string; bg: string }[] = [
+  { key: "urgent", label: "Urgent", color: "#C62828", bg: "#FFEBEE" },
+  { key: "today", label: "Today", color: "#E65100", bg: "#FFF3E0" },
+  { key: "upcoming", label: "Upcoming", color: "#F57F17", bg: "#FFFDE7" },
+  { key: "missed", label: "Missed", color: "#546E7A", bg: "#ECEFF1" },
+  { key: "all", label: "All", color: COLORS.primary, bg: COLORS.primaryLight },
 ];
 
 export default function RemindersPage() {
-  const [tab, setTab]         = useState<Tab>("urgent");
-  const [sort, setSort]       = useState<Sort>("days_left");
+  const [tab, setTab] = useState<Tab>("urgent");
+  const [sort, setSort] = useState<Sort>("days_left");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!auth.isLoggedIn()) { router.replace("/"); return; }
+    if (!auth.isLoggedIn()) router.replace("/");
   }, []);
-
   useEffect(() => {
     load();
   }, [tab, sort]);
@@ -44,181 +42,537 @@ export default function RemindersPage() {
     try {
       const res = await apiGetReminders(tab, sort);
       setPatients(res.data.data || []);
-    } catch (err) {
-      showToast("Failed to load reminders");
+    } catch {
+      showToast("Failed to load");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMark = async (patientId: string, status: string) => {
+  const handleMark = async (
+    patientId: string,
+    status: string,
+    label: string,
+  ) => {
     try {
       await apiUpdateReminderStatus(patientId, status);
-      showToast("Marked as " + status);
+      showToast("Marked as " + label);
       load();
-    } catch (err) {
+    } catch {
       showToast("Failed to update");
     }
   };
 
   const handleBulkSend = async () => {
     if (!patients.length) return;
-    try {
-      await Promise.all(patients.map((p) => apiUpdateReminderStatus(p.id, "sent")));
-      showToast("Sent reminders to " + patients.length + " patients");
-      load();
-    } catch (err) {
-      showToast("Failed to send bulk reminders");
-    }
+    await Promise.all(
+      patients.map((p) => apiUpdateReminderStatus(p.id, "sent")),
+    );
+    showToast(`Reminders marked for ${patients.length} patients`);
+    load();
   };
 
+  const activeTab = TABS.find((t) => t.key === tab)!;
+
   return (
-    <PhoneShell>
-      <TopBar title="Reminder Panel" backHref="/dashboard" />
-
-      {/* Priority guide */}
-      <div className="mx-4 mt-2.5 bg-[#e8f1fb] rounded-xl p-3 border border-[#dce6f0]">
-        <p className="text-[11px] font-extrabold text-[#1a6fc4] mb-1.5">Priority Guide</p>
-        <div className="grid grid-cols-2 gap-1 text-[10px] font-semibold text-gray-600">
-          <p>URGENT: 0-2 days left</p>
-          <p>TODAY: 3 days left</p>
-          <p>UPCOMING: 4-7 days</p>
-          <p>MISSED: Medicine over</p>
+    <AppShell
+      title="Reminder Panel"
+      urgentCount={patients.filter((p) => p.tag === "urgent").length}
+    >
+      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+        {/* Priority guide */}
+        <div
+          style={{
+            background: "white",
+            padding: "12px 16px",
+            borderBottom: `1px solid ${COLORS.border}`,
+          }}
+        >
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              color: COLORS.primary,
+              textTransform: "uppercase" as const,
+              letterSpacing: 1,
+              margin: "0 0 10px",
+            }}
+          >
+            Priority Guide
+          </p>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
+          >
+            {[
+              {
+                color: "#C62828",
+                bg: "#FFEBEE",
+                label: "URGENT",
+                desc: "0–2 days left. Call immediately.",
+              },
+              {
+                color: "#E65100",
+                bg: "#FFF3E0",
+                label: "TODAY",
+                desc: "3 days left. Send reminder today.",
+              },
+              {
+                color: "#F57F17",
+                bg: "#FFFDE7",
+                label: "UPCOMING",
+                desc: "4–7 days. Plan in advance.",
+              },
+              {
+                color: "#546E7A",
+                bg: "#ECEFF1",
+                label: "MISSED",
+                desc: "Medicine over. Follow up urgently.",
+              },
+            ].map((g) => (
+              <div
+                key={g.label}
+                style={{
+                  background: g.bg,
+                  borderRadius: 10,
+                  padding: "8px 10px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: g.color,
+                    flexShrink: 0,
+                    marginTop: 3,
+                  }}
+                />
+                <div>
+                  <p
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: g.color,
+                      margin: "0 0 2px",
+                    }}
+                  >
+                    {g.label}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 10,
+                      color: g.color,
+                      margin: 0,
+                      opacity: 0.8,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {g.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="grid grid-cols-5 gap-1 px-4 py-2.5">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`py-1.5 rounded-lg text-[10px] font-bold border-[1.5px] transition-all ${
-              tab === t.key ? t.activeClass : "bg-white border-[#dce6f0] text-gray-400"
-            }`}
+        {/* Tab pills */}
+        <div
+          style={{
+            background: "white",
+            padding: "10px 16px",
+            borderBottom: `1px solid ${COLORS.border}`,
+          }}
+        >
+          <div
+            style={{ display: "flex", gap: 6, overflowX: "auto" }}
+            className="scrollbar-hide"
           >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Sort */}
-      <div className="flex gap-1.5 px-4 pb-2 items-center">
-        <span className="text-[10px] font-bold text-gray-400">SORT:</span>
-        {(["days_left", "area", "medicine"] as Sort[]).map((s) => (
-          <button
-            key={s}
-            onClick={() => setSort(s)}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border-[1.5px] transition-all ${
-              sort === s
-                ? "bg-[#1a6fc4] border-[#1a6fc4] text-white"
-                : "bg-white border-[#dce6f0] text-gray-400"
-            }`}
-          >
-            {s === "days_left" ? "Days Left" : s === "area" ? "Area" : "Medicine"}
-          </button>
-        ))}
-      </div>
-
-      {/* Bulk bar */}
-      {patients.length > 0 && (
-        <div className="mx-4 mb-2 bg-[#e8f1fb] rounded-xl px-3 py-2 flex items-center gap-2">
-          <span className="text-[12px] font-bold text-[#1a6fc4] flex-1">
-            {patients.length} patients
-          </span>
-          <button
-            onClick={handleBulkSend}
-            className="bg-green-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg"
-          >
-            Mark All Sent
-          </button>
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  transition: "all 0.15s",
+                  background: tab === t.key ? t.color : "#F1F5F9",
+                  color: tab === t.key ? "white" : COLORS.textSecondary,
+                  boxShadow: tab === t.key ? `0 2px 8px ${t.color}50` : "none",
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        {/* Sort + bulk */}
+        <div
+          style={{
+            background: "white",
+            padding: "8px 16px 10px",
+            borderBottom: `1px solid ${COLORS.border}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: COLORS.textMuted,
+                margin: 0,
+                textTransform: "uppercase" as const,
+                letterSpacing: 0.8,
+              }}
+            >
+              Sort:
+            </p>
+            {(["days_left", "area", "medicine"] as Sort[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                style={{
+                  padding: "5px 10px",
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                  background: sort === s ? COLORS.primaryLight : "#F8FAFC",
+                  color: sort === s ? COLORS.primary : COLORS.textMuted,
+                  border: `1px solid ${sort === s ? COLORS.primary : COLORS.border}`,
+                }}
+              >
+                {s === "days_left"
+                  ? "Days Left"
+                  : s === "area"
+                    ? "Area"
+                    : "Medicine"}
+              </button>
+            ))}
+          </div>
+          {patients.length > 0 && (
+            <button
+              onClick={handleBulkSend}
+              style={{
+                padding: "7px 12px",
+                borderRadius: 8,
+                background: "#E8F5E9",
+                color: "#2E7D32",
+                border: "1.5px solid #A5D6A7",
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Mark All Sent
+            </button>
+          )}
+        </div>
+
+        {/* List */}
         {loading ? (
           <Spinner />
         ) : patients.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-10">
-            No patients in this category
-          </p>
-        ) : (
-          patients.map((p) => (
+          <div style={{ textAlign: "center", padding: "60px 24px" }}>
             <div
-              key={p.id}
-              className={`mx-4 mb-2.5 bg-white rounded-xl p-3 shadow-sm border-l-4 ${
-                p.tag === "urgent" ? "border-l-red-500" :
-                p.tag === "today"  ? "border-l-orange-500" :
-                p.tag === "upcoming" ? "border-l-yellow-400" : "border-l-gray-400"
-              }`}
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                background: activeTab.bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+                fontSize: 28,
+              }}
             >
-              <div className="flex items-start justify-between mb-1">
-                <Link href={`/patients/${p.id}`}>
-                  <p className="text-[14px] font-bold">{p.name}</p>
-                </Link>
-                <Tag tag={p.tag} />
-              </div>
-              <p className="text-[11px] text-gray-500 mb-0.5">
-                {p.diseases?.join(", ")} · {p.area}
-              </p>
-              <p className="text-[11px] text-gray-500 mb-2">
-                {p.mobile} · Dr. {p.doctor}
-              </p>
-
-              {/* Medicine pills */}
-              {p.medicines?.slice(0, 2).map((m) => (
-                <div key={m.id} className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-bold text-gray-700">{m.brand}</span>
-                  <span
-                    className={`text-[11px] font-bold ${
-                      (m.days_left ?? 0) <= 0 ? "text-red-500" :
-                      (m.days_left ?? 0) <= 3 ? "text-orange-500" : "text-gray-500"
-                    }`}
-                  >
-                    {(m.days_left ?? 0) <= 0 ? "FINISHED" : `${m.days_left}d left`}
-                  </span>
-                </div>
-              ))}
-
-              {/* Actions */}
-              <div className="flex gap-1.5 mt-2">
-                <a
-                  href={getWALink(p.whatsapp || p.mobile, p.name, p.medicines, p.days_left)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => handleMark(p.id, "sent")}
-                  className="flex-1 py-1.5 bg-green-500 text-white text-center rounded-lg text-[11px] font-bold"
-                >
-                  WhatsApp
-                </a>
-                <a
-                  href={"tel:" + p.mobile}
-                  className="flex-1 py-1.5 bg-[#e8f1fb] text-[#1a6fc4] text-center rounded-lg text-[11px] font-bold"
-                >
-                  Call
-                </a>
-                <button
-                  onClick={() => handleMark(p.id, "purchased")}
-                  className="flex-1 py-1.5 bg-green-50 text-green-600 border border-green-200 rounded-lg text-[11px] font-bold"
-                >
-                  Purchased
-                </button>
-                <button
-                  onClick={() => handleMark(p.id, "ignored")}
-                  className="px-2 py-1.5 bg-gray-100 text-gray-400 rounded-lg text-[11px] font-bold"
-                >
-                  Skip
-                </button>
-              </div>
+              <span style={{ color: activeTab.color, fontWeight: 900 }}>✓</span>
             </div>
-          ))
-        )}
-        <div className="h-4" />
-      </div>
+            <p
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                color: COLORS.textSecondary,
+                margin: "0 0 6px",
+              }}
+            >
+              No {tab} patients
+            </p>
+            <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>
+              {tab === "urgent"
+                ? "Great! No urgent cases right now."
+                : tab === "missed"
+                  ? "No missed cases."
+                  : "No patients in this category."}
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              padding: "12px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            {/* Bulk info bar */}
+            <div
+              style={{
+                background: activeTab.bg,
+                borderRadius: 12,
+                padding: "10px 14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                border: `1px solid ${activeTab.color}30`,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: activeTab.color,
+                  margin: 0,
+                }}
+              >
+                {patients.length} patient{patients.length !== 1 ? "s" : ""} need
+                {patients.length === 1 ? "s" : ""} attention
+              </p>
+              <Tag tag={tab === "all" ? "urgent" : tab} />
+            </div>
 
-      <BottomNav />
-      <Toast />
-    </PhoneShell>
+            {patients.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  background: "white",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  border: `1px solid ${COLORS.border}`,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                }}
+              >
+                {/* Left border */}
+                <div
+                  style={{
+                    height: 4,
+                    background:
+                      p.tag === "urgent"
+                        ? "#C62828"
+                        : p.tag === "today"
+                          ? "#E65100"
+                          : p.tag === "upcoming"
+                            ? "#F9A825"
+                            : "#90A4AE",
+                  }}
+                />
+                <div style={{ padding: "12px 14px" }}>
+                  {/* Header */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div>
+                      <Link
+                        href={`/patients/${p.id}`}
+                        style={{ textDecoration: "none" }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 800,
+                            color: COLORS.textPrimary,
+                            margin: "0 0 3px",
+                          }}
+                        >
+                          {p.name}
+                        </p>
+                      </Link>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: COLORS.textMuted,
+                          margin: 0,
+                        }}
+                      >
+                        {p.diseases?.join(", ")} &bull; {p.area} &bull;{" "}
+                        {p.mobile}
+                      </p>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: 4,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Tag tag={p.tag} />
+                      <p
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          margin: 0,
+                          color: p.days_left <= 0 ? "#C62828" : "#E65100",
+                        }}
+                      >
+                        {p.days_left <= 0 ? "Finished" : `${p.days_left}d left`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Medicines */}
+                  {p.medicines?.slice(0, 2).map((m, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "6px 10px",
+                        background: "#F8FAFC",
+                        borderRadius: 8,
+                        marginBottom: 4,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: COLORS.textPrimary,
+                          margin: 0,
+                        }}
+                      >
+                        {m.brand}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          margin: 0,
+                          color:
+                            (m.days_left ?? 0) <= 0
+                              ? "#C62828"
+                              : (m.days_left ?? 0) <= 3
+                                ? "#E65100"
+                                : COLORS.textMuted,
+                        }}
+                      >
+                        {(m.days_left ?? 0) <= 0
+                          ? "FINISHED"
+                          : `${m.days_left}d`}
+                      </p>
+                    </div>
+                  ))}
+                  {p.medicines?.length > 2 && (
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: COLORS.textMuted,
+                        margin: "4px 0 0",
+                      }}
+                    >
+                      +{p.medicines.length - 2} more medicines
+                    </p>
+                  )}
+
+                  {/* Action buttons */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                      gap: 6,
+                      marginTop: 10,
+                    }}
+                  >
+                    <a
+                      href={getWALink(
+                        p.whatsapp || p.mobile,
+                        p.name,
+                        p.medicines,
+                        p.days_left,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => handleMark(p.id, "sent", "sent")}
+                      style={{
+                        gridColumn: "span 2",
+                        padding: "9px 0",
+                        borderRadius: 10,
+                        background: "#25D366",
+                        color: "white",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textAlign: "center",
+                        textDecoration: "none",
+                        display: "block",
+                      }}
+                    >
+                      WhatsApp
+                    </a>
+                    <button
+                      onClick={() => handleMark(p.id, "purchased", "Purchased")}
+                      style={{
+                        padding: "9px 0",
+                        borderRadius: 10,
+                        background: "#E8F5E9",
+                        color: "#2E7D32",
+                        border: "1.5px solid #A5D6A7",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        fontFamily: "Inter, sans-serif",
+                      }}
+                    >
+                      Bought
+                    </button>
+                    <button
+                      onClick={() => handleMark(p.id, "ignored", "Ignored")}
+                      style={{
+                        padding: "9px 0",
+                        borderRadius: 10,
+                        background: "#F8FAFC",
+                        color: COLORS.textMuted,
+                        border: `1px solid ${COLORS.border}`,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        fontFamily: "Inter, sans-serif",
+                      }}
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div style={{ height: 8 }} />
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }
