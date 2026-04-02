@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { apiGetPatients, apiCreateInvoice } from "@/lib/api";
 import AppShell from "@/components/layout/AppShell";
 import Spinner from "@/components/ui/Spinner";
-import Toast, { showToast } from "@/components/ui/Toast";
+import { showToast } from "@/components/ui/Toast";
 import { COLORS } from "@/lib/theme";
 import type { Patient, InvoiceItem } from "@/types";
 

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -15,21 +14,21 @@ import (
 // ── Models ────────────────────────────────────────────────────────
 
 type Inventory struct {
-	ID              uuid.UUID  `json:"id"               gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	UserID          uuid.UUID  `json:"user_id"          gorm:"type:uuid;not null"`
-	Brand           string     `json:"brand"            gorm:"not null"`
-	Composition     string     `json:"composition"`
-	Company         string     `json:"company"`
-	Strength        string     `json:"strength"`
-	DosageForm      string     `json:"dosage_form"      gorm:"default:tablet"`
-	Category        string     `json:"category"`
-	CurrentStock    float64    `json:"current_stock"    gorm:"default:0"`
-	MinStockAlert   float64    `json:"min_stock_alert"  gorm:"default:10"`
-	Unit            string     `json:"unit"             gorm:"default:tablets"`
-	PurchasePrice   float64    `json:"purchase_price"   gorm:"default:0"`
-	SellingPrice    float64    `json:"selling_price"    gorm:"default:0"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
+	ID            uuid.UUID `json:"id"               gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID        uuid.UUID `json:"user_id"          gorm:"type:uuid;not null"`
+	Brand         string    `json:"brand"            gorm:"not null"`
+	Composition   string    `json:"composition"`
+	Company       string    `json:"company"`
+	Strength      string    `json:"strength"`
+	DosageForm    string    `json:"dosage_form"      gorm:"default:tablet"`
+	Category      string    `json:"category"`
+	CurrentStock  float64   `json:"current_stock"    gorm:"default:0"`
+	MinStockAlert float64   `json:"min_stock_alert"  gorm:"default:10"`
+	Unit          string    `json:"unit"             gorm:"default:tablets"`
+	PurchasePrice float64   `json:"purchase_price"   gorm:"default:0"`
+	SellingPrice  float64   `json:"selling_price"    gorm:"default:0"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type StockMovement struct {
@@ -45,14 +44,14 @@ type StockMovement struct {
 	CreatedAt   time.Time  `json:"created_at"`
 }
 
-func (Inventory) TableName() string      { return "inventory" }
-func (StockMovement) TableName() string  { return "stock_movements" }
+func (Inventory) TableName() string     { return "inventory" }
+func (StockMovement) TableName() string { return "stock_movements" }
 
 // ── GET /api/v1/inventory ─────────────────────────────────────────
 
 func GetInventory(c *gin.Context) {
-	userID  := c.GetString("userID")
-	search  := c.Query("search")
+	userID := c.GetString("userID")
+	search := c.Query("search")
 	category := c.Query("category")
 	lowStock := c.Query("low_stock")
 
@@ -92,8 +91,8 @@ func GetInventory(c *gin.Context) {
 
 func SearchInventory(c *gin.Context) {
 	userID := c.GetString("userID")
-	q      := c.Query("q")
-	field  := c.DefaultQuery("field", "brand") // brand or composition
+	q := c.Query("q")
+	field := c.DefaultQuery("field", "brand") // brand or composition
 
 	if len(q) < 2 {
 		helpers.Success(c, []interface{}{})
@@ -125,7 +124,7 @@ func CreateInventoryItem(c *gin.Context) {
 		helpers.BadRequest(c, err.Error())
 		return
 	}
-	input.ID     = uuid.Nil
+	input.ID = uuid.Nil
 	input.UserID = uid
 
 	if err := config.DB.Create(&input).Error; err != nil {
@@ -139,7 +138,7 @@ func CreateInventoryItem(c *gin.Context) {
 
 func UpdateInventoryItem(c *gin.Context) {
 	userID := c.GetString("userID")
-	id     := c.Param("id")
+	id := c.Param("id")
 
 	var item Inventory
 	if err := config.DB.Where("id = ? AND user_id = ?", id, userID).First(&item).Error; err != nil {
@@ -152,7 +151,9 @@ func UpdateInventoryItem(c *gin.Context) {
 		helpers.BadRequest(c, err.Error())
 		return
 	}
-	delete(updates, "id"); delete(updates, "user_id"); delete(updates, "created_at")
+	delete(updates, "id")
+	delete(updates, "user_id")
+	delete(updates, "created_at")
 
 	config.DB.Model(&item).Updates(updates)
 	config.DB.Where("id = ?", item.ID).First(&item)
@@ -163,7 +164,7 @@ func UpdateInventoryItem(c *gin.Context) {
 
 func DeleteInventoryItem(c *gin.Context) {
 	userID := c.GetString("userID")
-	id     := c.Param("id")
+	id := c.Param("id")
 
 	result := config.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&Inventory{})
 	if result.RowsAffected == 0 {
@@ -178,14 +179,14 @@ func DeleteInventoryItem(c *gin.Context) {
 
 func UpdateStock(c *gin.Context) {
 	userID := c.GetString("userID")
-	id     := c.Param("id")
+	id := c.Param("id")
 	uid, _ := uuid.Parse(userID)
 
 	var input struct {
-		Type      string  `json:"type"`     // add | deduct | adjustment
-		Quantity  float64 `json:"quantity"`
-		Reason    string  `json:"reason"`
-		Notes     string  `json:"notes"`
+		Type     string  `json:"type"` // add | deduct | adjustment
+		Quantity float64 `json:"quantity"`
+		Reason   string  `json:"reason"`
+		Notes    string  `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		helpers.BadRequest(c, err.Error())
@@ -211,10 +212,12 @@ func UpdateStock(c *gin.Context) {
 		case "adjustment":
 			item.CurrentStock = input.Quantity
 		}
-		if err := tx.Save(&item).Error; err != nil { return err }
+		if err := tx.Save(&item).Error; err != nil {
+			return err
+		}
 
 		invID, _ := uuid.Parse(id)
-		movement  := StockMovement{
+		movement := StockMovement{
 			InventoryID: invID,
 			UserID:      uid,
 			Type:        input.Type,
