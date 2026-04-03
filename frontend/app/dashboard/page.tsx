@@ -297,14 +297,6 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-                        {a.desc}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
 
           {/* Urgent patients */}
           <div>
