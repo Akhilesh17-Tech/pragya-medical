@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Akhilesh17-Tech/pragya-medical/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -61,5 +62,20 @@ func ConnectDB() {
 	sqlDB.SetMaxIdleConns(5)
 
 	DB = db
+
+	// Auto-migrate all models
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Patient{},
+		&models.Medicine{},
+		&models.ReminderLog{},
+		&models.Invoice{},
+		&models.Settings{},
+	)
+	if err != nil {
+		log.Fatal("Failed to auto-migrate models:", err)
+	}
+
 	log.Println("✅ Database connected successfully")
+	log.Println("✅ All tables migrated successfully")
 }
