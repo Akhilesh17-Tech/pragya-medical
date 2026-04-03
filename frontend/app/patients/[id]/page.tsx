@@ -221,7 +221,7 @@ export default function PatientProfilePage() {
           <div
             style={{
               marginTop: 16,
-              padding: "10px 16px",
+              padding: "10px clamp(16px, 3vw, 32px)",
               borderRadius: 14,
               background:
                 patient.days_left <= 0
@@ -326,7 +326,7 @@ export default function PatientProfilePage() {
         {/* Content */}
         <div
           style={{
-            padding: "16px",
+            padding: "16px clamp(16px, 3vw, 32px)",
             display: "flex",
             flexDirection: "column",
             gap: 12,
@@ -737,7 +737,9 @@ function InfoCard({
           {title}
         </p>
       </div>
-      <div style={{ padding: "4px 16px 12px" }}>{children}</div>
+      <div style={{ padding: "4px clamp(16px, 3vw, 32px) 12px" }}>
+        {children}
+      </div>
     </div>
   );
 }

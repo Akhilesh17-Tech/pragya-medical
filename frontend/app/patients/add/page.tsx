@@ -167,12 +167,12 @@ export default function AddPatientPage() {
 
   return (
     <AppShell title={`Add Patient — Step ${step + 1}`}>
-      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: "0" }}>
         {/* Step progress */}
         <div
           style={{
             background: "white",
-            padding: "14px 16px",
+            padding: "14px clamp(16px, 3vw, 32px)",
             borderBottom: `1px solid ${COLORS.border}`,
           }}
         >
@@ -268,7 +268,7 @@ export default function AddPatientPage() {
 
         <div
           style={{
-            padding: "16px",
+            padding: "16px clamp(16px, 3vw, 32px)",
             display: "flex",
             flexDirection: "column",
             gap: 12,
@@ -1276,7 +1276,7 @@ export default function AddPatientPage() {
             position: "sticky",
             bottom: 0,
             background: "white",
-            padding: "12px 16px",
+            padding: "12px clamp(16px, 3vw, 32px)",
             borderTop: `1px solid ${COLORS.border}`,
             display: "flex",
             gap: 10,

@@ -136,7 +136,7 @@ export default function DashboardPage() {
       {loading ? (
         <Spinner />
       ) : (
-        <div style={{ padding: "16px 16px 24px" }}>
+        <div style={{ padding: "16px clamp(16px, 3vw, 32px) 24px" }}>
           {/* Stats grid */}
           {stats && (
             <div style={{ marginBottom: 24 }}>
@@ -148,24 +148,19 @@ export default function DashboardPage() {
                   textTransform: "uppercase",
                   letterSpacing: 1.2,
                   marginBottom: 10,
+                  padding: "0 16px",
                 }}
               >
                 Today's Overview
               </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
-                  gap: 10,
-                }}
-              >
+              <div className="stat-cards-grid" style={{ padding: "0 16px" }}>
                 {STAT_CARDS(stats).map((s, i) => (
                   <Link href="/reminders" key={i}>
                     <div
                       style={{
                         background: s.bg,
                         borderRadius: 16,
-                        padding: "14px 10px",
+                        padding: "16px 12px",
                         textAlign: "center",
                         cursor: "pointer",
                         transition: "transform 0.15s",
@@ -179,12 +174,12 @@ export default function DashboardPage() {
                         (e.currentTarget.style.transform = "scale(1)")
                       }
                     >
-                      <div style={{ fontSize: 20, marginBottom: 4 }}>
+                      <div style={{ fontSize: 22, marginBottom: 4 }}>
                         {s.icon}
                       </div>
                       <p
                         style={{
-                          fontSize: 24,
+                          fontSize: 28,
                           fontWeight: 900,
                           color: s.color,
                           margin: 0,
@@ -195,11 +190,11 @@ export default function DashboardPage() {
                       </p>
                       <p
                         style={{
-                          fontSize: 10,
+                          fontSize: 11,
                           color: s.color,
                           fontWeight: 600,
-                          margin: "4px 0 0",
-                          opacity: 0.8,
+                          margin: "6px 0 0",
+                          opacity: 0.85,
                           lineHeight: 1.2,
                         }}
                       >
@@ -213,7 +208,7 @@ export default function DashboardPage() {
           )}
 
           {/* Quick actions */}
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 24, padding: "0 16px" }}>
             <p
               style={{
                 fontSize: 11,
@@ -226,20 +221,14 @@ export default function DashboardPage() {
             >
               Quick Actions
             </p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 10,
-              }}
-            >
+            <div className="quick-actions-grid">
               {QUICK_ACTIONS.map((a) => (
                 <Link key={a.href} href={a.href}>
                   <div
                     style={{
                       background: "white",
                       borderRadius: 16,
-                      padding: "14px",
+                      padding: "16px",
                       border: `1px solid ${COLORS.border}`,
                       cursor: "pointer",
                       transition: "all 0.15s",
@@ -250,19 +239,21 @@ export default function DashboardPage() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = a.color;
-                      e.currentTarget.style.boxShadow = `0 4px 12px ${a.bg}`;
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.1)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = COLORS.border;
+                      e.currentTarget.style.transform = "translateY(0)";
                       e.currentTarget.style.boxShadow =
                         "0 1px 4px rgba(0,0,0,0.06)";
                     }}
                   >
                     <div
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
+                        width: 44,
+                        height: 44,
+                        borderRadius: 14,
                         background: a.bg,
                         display: "flex",
                         alignItems: "center",
@@ -272,11 +263,11 @@ export default function DashboardPage() {
                     >
                       <div
                         style={{
-                          width: 20,
-                          height: 20,
+                          width: 22,
+                          height: 22,
                           borderRadius: "50%",
                           background: a.color,
-                          opacity: 0.7,
+                          opacity: 0.8,
                         }}
                       />
                     </div>
@@ -298,6 +289,14 @@ export default function DashboardPage() {
                           margin: "2px 0 0",
                         }}
                       >
+                        {a.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
                         {a.desc}
                       </p>
                     </div>

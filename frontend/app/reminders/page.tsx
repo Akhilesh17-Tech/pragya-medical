@@ -79,12 +79,12 @@ export default function RemindersPage() {
       title="Reminder Panel"
       urgentCount={patients.filter((p) => p.tag === "urgent").length}
     >
-      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: "0" }}>
         {/* Priority guide */}
         <div
           style={{
             background: "white",
-            padding: "12px 16px",
+            padding: "12px clamp(16px, 3vw, 32px)",
             borderBottom: `1px solid ${COLORS.border}`,
           }}
         >

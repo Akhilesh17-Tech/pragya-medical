@@ -73,12 +73,12 @@ export default function PatientsPage() {
 
   return (
     <AppShell title="All Patients">
-      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: "0" }}>
         {/* Search + filter section */}
         <div
           style={{
             background: "white",
-            padding: "12px 16px 0",
+            padding: "12px clamp(16px, 3vw, 32px) 0",
             borderBottom: `1px solid ${COLORS.border}`,
             boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
           }}
@@ -176,7 +176,7 @@ export default function PatientsPage() {
         {/* Count bar */}
         <div
           style={{
-            padding: "10px 16px",
+            padding: "10px clamp(16px, 3vw, 32px)",
             background: "white",
             display: "flex",
             alignItems: "center",
@@ -258,7 +258,7 @@ export default function PatientsPage() {
         ) : (
           <div
             style={{
-              padding: "12px 16px",
+              padding: "16px clamp(16px, 3vw, 32px)",
               display: "flex",
               flexDirection: "column",
               gap: 10,

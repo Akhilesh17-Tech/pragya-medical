@@ -197,12 +197,12 @@ export default function InventoryPage() {
 
   return (
     <AppShell title="Inventory">
-      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: "0" }}>
         {/* Hero */}
         <div
           style={{
             background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
-            padding: "16px 16px 20px",
+            padding: "16px clamp(16px, 3vw, 32px) 20px",
           }}
         >
           <div
@@ -313,7 +313,7 @@ export default function InventoryPage() {
         <div
           style={{
             background: "white",
-            padding: "10px 16px",
+            padding: "10px clamp(16px, 3vw, 32px)",
             borderBottom: `1px solid ${COLORS.border}`,
           }}
         >
@@ -451,7 +451,7 @@ export default function InventoryPage() {
         ) : (
           <div
             style={{
-              padding: "12px 16px",
+              padding: "16px clamp(16px, 3vw, 32px)",
               display: "flex",
               flexDirection: "column",
               gap: 10,

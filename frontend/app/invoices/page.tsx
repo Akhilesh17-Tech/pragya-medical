@@ -104,12 +104,12 @@ export default function InvoicesPage() {
 
   return (
     <AppShell title="Invoices">
-      <div style={{ background: "#F8FAFC", minHeight: "100%" }}>
+      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: "0" }}>
         {/* Hero stats */}
         <div
           style={{
             background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
-            padding: "16px 16px 20px",
+            padding: "16px clamp(16px, 3vw, 32px) 20px",
           }}
         >
           <div
@@ -126,7 +126,7 @@ export default function InvoicesPage() {
                 gridColumn: "span 2",
                 background: "rgba(255,255,255,0.12)",
                 borderRadius: 16,
-                padding: "14px 16px",
+                padding: "14px clamp(16px, 3vw, 32px)",
                 border: "1px solid rgba(255,255,255,0.15)",
                 display: "flex",
                 alignItems: "center",
@@ -231,7 +231,7 @@ export default function InvoicesPage() {
           style={{
             background: "white",
             borderBottom: `1px solid ${COLORS.border}`,
-            padding: "10px 16px",
+            padding: "10px clamp(16px, 3vw, 32px)",
           }}
         >
           <div
@@ -282,7 +282,7 @@ export default function InvoicesPage() {
                 key={f.key}
                 onClick={() => setFilter(f.key)}
                 style={{
-                  padding: "7px 16px",
+                  padding: "7px clamp(16px, 3vw, 32px)",
                   borderRadius: 20,
                   fontSize: 12,
                   fontWeight: 700,
@@ -354,7 +354,7 @@ export default function InvoicesPage() {
         ) : (
           <div
             style={{
-              padding: "12px 16px",
+              padding: "16px clamp(16px, 3vw, 32px)",
               display: "flex",
               flexDirection: "column",
               gap: 10,

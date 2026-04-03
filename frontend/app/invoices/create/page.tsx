@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { apiGetPatients, apiCreateInvoice } from "@/lib/api";
@@ -9,7 +9,7 @@ import { showToast } from "@/components/ui/Toast";
 import { COLORS } from "@/lib/theme";
 import type { Patient, InvoiceItem } from "@/types";
 
-export default function CreateInvoicePage() {
+function CreateInvoiceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -186,12 +186,18 @@ export default function CreateInvoicePage() {
 
   return (
     <AppShell title="Create Invoice">
-      <div style={{ background: "#F8FAFC", minHeight: "100%", padding: 16 }}>
+      <div
+        style={{
+          background: "#F8FAFC",
+          minHeight: "100%",
+          padding: "16px clamp(16px, 3vw, 32px)",
+        }}
+      >
         {/* Patient selector */}
         <div style={card}>
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               background: "#FAFBFC",
               borderBottom: `1px solid ${COLORS.border}`,
             }}
@@ -349,7 +355,7 @@ export default function CreateInvoicePage() {
         <div style={card}>
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               background: "#FAFBFC",
               borderBottom: `1px solid ${COLORS.border}`,
             }}
@@ -602,7 +608,7 @@ export default function CreateInvoicePage() {
         <div style={card}>
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               background: "#FAFBFC",
               borderBottom: `1px solid ${COLORS.border}`,
             }}
@@ -727,7 +733,7 @@ export default function CreateInvoicePage() {
         <div style={card}>
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               background: "#FAFBFC",
               borderBottom: `1px solid ${COLORS.border}`,
             }}
@@ -836,7 +842,7 @@ export default function CreateInvoicePage() {
         <div style={card}>
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               background: "#FAFBFC",
               borderBottom: `1px solid ${COLORS.border}`,
             }}
@@ -883,7 +889,7 @@ export default function CreateInvoicePage() {
         <div style={card}>
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               background: "#FAFBFC",
               borderBottom: `1px solid ${COLORS.border}`,
             }}
@@ -949,5 +955,19 @@ export default function CreateInvoicePage() {
         </button>
       </div>
     </AppShell>
+  );
+}
+
+export default function CreateInvoicePage() {
+  return (
+    <Suspense
+      fallback={
+        <AppShell title="Create Invoice">
+          <Spinner />
+        </AppShell>
+      }
+    >
+      <CreateInvoiceContent />
+    </Suspense>
   );
 }

@@ -272,7 +272,7 @@ export default function AnalyticsPage() {
         >
           <div
             style={{
-              padding: "12px 16px",
+              padding: "12px clamp(16px, 3vw, 32px)",
               borderBottom: `1px solid ${COLORS.border}`,
               background: "#FAFBFC",
             }}
@@ -290,7 +290,7 @@ export default function AnalyticsPage() {
               Summary
             </p>
           </div>
-          <div style={{ padding: "4px 16px 12px" }}>
+          <div style={{ padding: "4px clamp(16px, 3vw, 32px) 12px" }}>
             {[
               ["Total Patients", data.total_patients, COLORS.primary],
               ["Urgent Reminders", data.urgent, "#C62828"],
